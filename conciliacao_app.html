@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delta Cafés — Conciliação SAP / Rangel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --red: #C8102E; --red-dark: #8B0000; --red-light: #FCE4EC;
+  --blue: #1F3864; --blue-mid: #2E5BA8; --blue-light: #E8EFF9;
+  --green: #2E7D32; --green-light: #E8F5E9;
+  --bg: #F4F5F7; --white: #FFFFFF; --border: #E0E0E0;
+  --text: #1A1A2E; --muted: #6B7280;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+.header { background: var(--blue); color: white; padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; height: 52px; position: sticky; top: 0; z-index: 50; }
+.header-logo { font-size: 16px; font-weight: 700; }
+.header-info { margin-left: auto; font-size: 11px; opacity: 0.65; }
+.layout { display: flex; height: calc(100vh - 52px); }
+.sidebar { width: 210px; background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
+.main { flex: 1; overflow-y: auto; padding: 1.25rem; }
+.nav-group { padding: 0.6rem 1rem 0.2rem; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 7px 1rem; cursor: pointer; color: var(--muted); border-left: 3px solid transparent; transition: all 0.12s; }
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--blue-light); color: var(--blue); border-left-color: var(--blue); font-weight: 600; }
+.nav-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--red); color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; }
+.page { display: none; }
+.page.active { display: block; }
+.page-title { font-size: 17px; font-weight: 700; margin-bottom: 3px; }
+.page-sub { font-size: 12px; color: var(--muted); margin-bottom: 1.1rem; }
+
+/* Upload */
+.upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9rem; margin-bottom: 1.1rem; }
+.upload-card { background: var(--white); border: 1.5px dashed var(--border); border-radius: 10px; padding: 1.1rem; cursor: pointer; transition: all 0.15s; display: block; }
+.upload-card:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+.upload-card.loaded { border-style: solid; border-color: var(--green); background: var(--green-light); }
+.upload-icon { font-size: 26px; margin-bottom: 6px; }
+.upload-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.upload-desc { font-size: 11px; color: var(--muted); }
+.upload-ok { font-size: 11px; color: var(--green); font-weight: 600; margin-top: 5px; }
+.upload-card input[type=file] { display: none; }
+.btn { padding: 8px 18px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.12s; }
+.btn-red { background: var(--red); color: white; }
+.btn-red:hover { background: var(--red-dark); }
+.btn-red:disabled { background: #ccc; cursor: not-allowed; }
+.btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+.action-bar { display: flex; align-items: center; gap: 0.75rem; }
+.prog-wrap { flex: 1; display: none; }
+.prog-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--red); border-radius: 3px; transition: width 0.3s; width: 0%; }
+.prog-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+/* Stats */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 1.1rem; }
+.stat { background: var(--white); border-radius: 8px; padding: 0.85rem 1rem; border: 1px solid var(--border); }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.stat-val { font-size: 22px; font-weight: 700; }
+.stat-val.red { color: var(--red); }
+.stat-val.green { color: var(--green); }
+.stat-val.blue { color: var(--blue-mid); }
+.stat-val.orange { color: #E65100; }
+
+/* Table card */
+.tcard { background: var(--white); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+.tcard-header { padding: 0.85rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.tcard-title { font-size: 13px; font-weight: 700; }
+.tcard-count { font-size: 11px; color: var(--muted); background: var(--bg); padding: 2px 8px; border-radius: 8px; }
+.search-input { border: 1px solid var(--border); border-radius: 5px; padding: 5px 9px; font-size: 12px; outline: none; width: 190px; }
+.search-input:focus { border-color: var(--blue-mid); }
+.filter-btns { display: flex; gap: 5px; }
+.fbtn { padding: 3px 9px; border-radius: 4px; border: 1px solid var(--border); background: white; font-size: 11px; cursor: pointer; }
+.fbtn:hover { border-color: var(--blue-mid); }
+.fbtn.active { background: var(--blue); color: white; border-color: var(--blue); }
+.tcard-wrap { overflow-x: auto; max-height: 520px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { position: sticky; top: 0; background: var(--blue); color: white; padding: 7px 9px; text-align: left; font-weight: 500; white-space: nowrap; z-index: 2; }
+td { padding: 6px 9px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+tr:hover td { background: #fafafa; }
+tr.pos td { background: #EBF5FB; }
+tr.pos .dcell { color: #1565C0; font-weight: 700; }
+tr.neg td { background: var(--red-light); }
+tr.neg .dcell { color: #B71C1C; font-weight: 700; }
+.empty { text-align: center; padding: 3rem; color: var(--muted); }
+.badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+.badge-sap { background: #E3F2FD; color: #1565C0; }
+.badge-rangel { background: #FFF3E0; color: #E65100; }
+.toast { position: fixed; bottom: 1.25rem; right: 1.25rem; padding: 10px 15px; border-radius: 7px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; z-index: 999; color: white; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+.overlay-box { background: white; border-radius: 12px; padding: 2rem; text-align: center; min-width: 260px; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--red); border-radius: 50%; animation: spin 0.75s linear infinite; margin: 0 auto 0.9rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.overlay-title { font-size: 14px; font-weight: 600; }
+.overlay-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.hint { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 7px; padding: 0.75rem 1rem; font-size: 12px; color: #5D4037; margin-bottom: 1rem; }
+.hint strong { color: var(--red-dark); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">🔴 Delta Cafés — Conciliação SAP / Rangel</div>
+  <div class="header-info" id="hdr-info">Sem dados carregados</div>
+</div>
+
+<div class="layout">
+<div class="sidebar">
+  <div class="nav-group">Ficheiros</div>
+  <div class="nav-item active" onclick="nav('upload')" id="nav-upload"><span class="nav-dot"></span>Upload</div>
+  <div class="nav-group">Stock</div>
+  <div class="nav-item" onclick="nav('resumo')" id="nav-resumo"><span class="nav-dot"></span>Resumo Geral</div>
+  <div class="nav-item" onclick="nav('d12')" id="nav-d12"><span class="nav-dot"></span>Dep.12 Livre</div>
+  <div class="nav-item" onclick="nav('d15')" id="nav-d15"><span class="nav-dot"></span>Dep.15 Lim.Val.</div>
+  <div class="nav-item" onclick="nav('d16')" id="nav-d16"><span class="nav-dot"></span>Dep.16 Rejeit.</div>
+  <div class="nav-item" onclick="nav('d17')" id="nav-d17"><span class="nav-dot"></span>Dep.17 QI</div>
+  <div class="nav-item" onclick="nav('d18')" id="nav-d18"><span class="nav-dot"></span>Dep.18 Dif.Stock</div>
+  <div class="nav-item" onclick="nav('d20')" id="nav-d20"><span class="nav-dot"></span>Dep.20 Amostras</div>
+  <div class="nav-group">Anomalias</div>
+  <div class="nav-item" onclick="nav('prod-rangel')" id="nav-prod-rangel"><span class="nav-dot"></span>Prod. só Rangel</div>
+  <div class="nav-item" onclick="nav('lotes-rangel')" id="nav-lotes-rangel"><span class="nav-dot"></span>Lotes só Rangel</div>
+  <div class="nav-group">Movimentos</div>
+  <div class="nav-item" onclick="nav('movimentos')" id="nav-movimentos"><span class="nav-dot"></span>Divergências</div>
+</div>
+
+<div class="main">
+
+<!-- UPLOAD -->
+<div class="page active" id="page-upload">
+  <div class="page-title">Carregar ficheiros</div>
+  <div class="page-sub">Carrega os 4 ficheiros para actualizar a análise. Os dados são processados localmente no teu browser.</div>
+  <div class="upload-grid">
+    <label class="upload-card" id="card-sap">
+      <input type="file" id="f-sap" accept=".xlsx,.xls">
+      <div class="upload-icon">📊</div>
+      <div class="upload-title">Stock SAP</div>
+      <div class="upload-desc">Extrato de existências SAP ECC (formato original — dados a partir da linha 7)</div>
+      <div class="upload-ok" id="ok-sap"></div>
+    </label>
+    <label class="upload-card" id="card-rangel">
+      <input type="file" id="f-rangel" accept=".xlsx,.xls">
+      <div class="upload-icon">🏭</div>
+      <div class="upload-title">Stock Rangel</div>
+      <div class="upload-desc">Ficheiro de stock do operador logístico (cabeçalho na linha 1)</div>
+      <div class="upload-ok" id="ok-rangel"></div>
+    </label>
+    <label class="upload-card" id="card-msap">
+      <input type="file" id="f-msap" accept=".xlsx,.xls">
+      <div class="upload-icon">📋</div>
+      <div class="upload-title">Movimentos SAP</div>
+      <div class="upload-desc">Saída dinâmica de lista de movimentos SAP (dados a partir da linha 6)</div>
+      <div class="upload-ok" id="ok-msap"></div>
+    </label>
+    <label class="upload-card" id="card-mrangel">
+      <input type="file" id="f-mrangel" accept=".xlsx,.xls">
+      <div class="upload-icon">🔄</div>
+      <div class="upload-title">Movimentos Rangel</div>
+      <div class="upload-desc">Relatório de movimentos do operador logístico (cabeçalho na linha 1)</div>
+      <div class="upload-ok" id="ok-mrangel"></div>
+    </label>
+  </div>
+  <div class="hint">💡 <strong>Cruzamento de movimentos:</strong> feito pelo <strong>Número do Documento Externo</strong> — campo "Número do Documento Externo" no Rangel vs campos "Texto cab.documento" ou "Referência" no SAP.</div>
+  <div class="action-bar">
+    <button class="btn btn-red" id="btn-proc" onclick="processAll()" disabled>⚡ Processar</button>
+    <div class="prog-wrap" id="prog-wrap">
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-label" id="prog-label"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RESUMO -->
+<div class="page" id="page-resumo">
+  <div class="page-title">Resumo Geral</div>
+  <div class="page-sub">Total por Material/Lote — todos os depósitos combinados</div>
+  <div class="stats-row" id="st-resumo"></div>
+  <div class="tcard">
+    <div class="tcard-header">
+      <span class="tcard-title">Diferenças de stock</span>
+      <span class="tcard-count" id="cnt-resumo">—</span>
+      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar material ou descrição..." oninput="search('resumo',this.value)">
+    </div>
+    <div class="tcard-wrap"><table id="tbl-resumo">
+      <thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">Stock SAP</th><th style="text-align:right">Stock Rangel</th><th style="text-align:right">Diferença</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- DEP PAGES -->
+<div class="page" id="page-d12">
+  <div class="page-title">Depósito 12 — Livre + Reprocesso/Ajustar</div>
+  <div class="page-sub">Diferenças entre SAP dep.12 e estados Livre/Reprocesso/Ajustar no Rangel</div>
+  <div class="stats-row" id="st-d12"></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d12">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d12',this.value)"></div><div class="tcard-wrap"><table id="tbl-d12"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="page" id="page-d15">
+  <div class="page-title">Depósito 15 — Limite Validade</div>
+  <div class="page-sub">Diferenças entre SAP e estado Limite Validade no Rangel</div>
+  <div class="stats-row" id="st-d15"></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d15">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d15',this.value)"></div><div class="tcard-wrap"><table id="tbl-d15"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="page" id="page-d16">
+  <div class="page-title">Depósito 16 — Rejeitados</div>
+  <div class="page-sub">Diferenças entre SAP e estado Rejeitados no Rangel</div>
+  <div class="stats-row" id="st-d16"></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d16">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d16',this.value)"></div><div class="tcard-wrap"><table id="tbl-d16"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="page" id="page-d17">
+  <div class="page-title">Depósito 17 — Quarentena / Qualidade</div>
+  <div class="page-sub">Diferenças entre SAP dep.17 e estados QI no Rangel</div>
+  <div class="stats-row" id="st-d17"></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d17">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d17',this.value)"></div><div class="tcard-wrap"><table id="tbl-d17"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="page" id="page-d18">
+  <div class="page-title">Depósito 18 — Diferença de Stock</div>
+  <div class="page-sub">Diferenças entre SAP e estado Diferença Stock no Rangel</div>
+  <div class="stats-row" id="st-d18"></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d18">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d18',this.value)"></div><div class="tcard-wrap"><table id="tbl-d18"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+<div class="page" id="page-d20">
+  <div class="page-title">Depósito 20 — Amostras</div>
+  <div class="page-sub">Diferenças entre SAP dep.20 e estado Amostras no Rangel</div>
+  <div class="stats-row" id="st-d20"></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d20">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d20',this.value)"></div><div class="tcard-wrap"><table id="tbl-d20"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+</div>
+
+<!-- PROD SÓ RANGEL -->
+<div class="page" id="page-prod-rangel">
+  <div class="page-title">Produtos só no Rangel</div>
+  <div class="page-sub">Materiais que existem no stock Rangel mas que o SAP não conhece em nenhum depósito</div>
+  <div class="stats-row" id="st-prod-rangel"></div>
+  <div class="tcard">
+    <div class="tcard-header">
+      <span class="tcard-title">Materiais desconhecidos no SAP</span>
+      <span class="tcard-count" id="cnt-prod-rangel">—</span>
+      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('prod-rangel',this.value)">
+    </div>
+    <div class="tcard-wrap"><table id="tbl-prod-rangel">
+      <thead><tr><th>Material</th><th>Descrição</th><th>Estado Rangel</th><th>Lote</th><th style="text-align:right">Qtd Rangel</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- LOTES SÓ RANGEL -->
+<div class="page" id="page-lotes-rangel">
+  <div class="page-title">Lotes só no Rangel</div>
+  <div class="page-sub">Materiais que existem em ambos os sistemas, mas com lotes que o SAP não tem registados em nenhum depósito</div>
+  <div class="stats-row" id="st-lotes-rangel"></div>
+  <div class="tcard">
+    <div class="tcard-header">
+      <span class="tcard-title">Lotes não reconhecidos no SAP</span>
+      <span class="tcard-count" id="cnt-lotes-rangel">—</span>
+      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('lotes-rangel',this.value)">
+    </div>
+    <div class="tcard-wrap"><table id="tbl-lotes-rangel">
+      <thead><tr><th>Material</th><th>Descrição</th><th>Estado Rangel</th><th>Lote</th><th style="text-align:right">Qtd Rangel</th><th>Lotes SAP para este material</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- MOVIMENTOS -->
+<div class="page" id="page-movimentos">
+  <div class="page-title">Divergências de Movimentos</div>
+  <div class="page-sub">Movimentos cruzados pelo Nº Documento Externo — identificação do que existe num sistema e não no outro</div>
+  <div class="stats-row" id="st-mov"></div>
+  <div class="tcard">
+    <div class="tcard-header">
+      <span class="tcard-title">Movimentos divergentes</span>
+      <span class="tcard-count" id="cnt-mov">—</span>
+      <div class="filter-btns">
+        <button class="fbtn active" onclick="movFilter('todos',this)">Todos</button>
+        <button class="fbtn" onclick="movFilter('so_sap',this)">Só no SAP</button>
+        <button class="fbtn" onclick="movFilter('so_rangel',this)">Só no Rangel</button>
+      </div>
+      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('mov',this.value)">
+    </div>
+    <div class="tcard-wrap"><table id="tbl-mov">
+      <thead><tr><th>Origem</th><th>Material</th><th>Descrição</th><th>Lote</th><th>Data</th><th>Tipo Mov.</th><th style="text-align:right">Qtd</th><th>Nº Doc. Externo</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="overlay" id="overlay">
+  <div class="overlay-box">
+    <div class="spinner"></div>
+    <div class="overlay-title" id="ov-title">A processar...</div>
+    <div class="overlay-sub" id="ov-sub"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DE_PARA = {
+  'LIVRE':12,'REPROCESSO/AJUSTAR':12,
+  'LIMITE VALIDADE':15,'QI - LIMITE VALIDADE':15,
+  'REJEITADOS':16,
+  'QI - QUARENTENA / QUALIDADE':17,'QI-QUARENTENA/QUALIDADE':17,
+  'DIFERENÇA DE STOCK':18,'DIFERENÇA STOCK':18,
+  'HANDLING':19,'ETIQUETAGEM/MANIPULAÇÃO':19,
+  'AMOSTRAS':20
+};
+
+let G = {
+  sapStock:[],rangelStock:[],sapMov:[],rangelMov:[],
+  resumo:[],deps:{12:[],15:[],16:[],17:[],18:[],20:[]},
+  prodSoRangel:[],lotesSoRangel:[],
+  movDiverg:[],allMovDiverg:[]
+};
+
+let searchTerms = {};
+let movMode = 'todos';
+let pending = {sap:null,rangel:null,msap:null,mrangel:null};
+
+function normMat(v){ if(!v&&v!==0) return ''; let s=String(v).trim(); return /^\d+$/.test(s)?String(parseInt(s,10)):s; }
+function normLote(v){ if(!v&&v!==0) return ''; let s=String(v).trim(); if(!s||s==='null') return ''; let n=parseFloat(s); return (!isNaN(n)&&/^\d+(\.\d+)?$/.test(s))?String(Math.round(n)):s; }
+function normDoc(v){ if(!v) return ''; return String(v).trim().replace(/\s+/g,''); }
+function parseQty(v){ if(typeof v==='number') return v; if(!v) return 0; let s=String(v).trim().replace(/\s/g,''); if(s.includes(',')&&s.includes('.')) s=s.replace(/\./g,'').replace(',','.'); else if(s.includes(',')) s=s.replace(',','.'); return parseFloat(s)||0; }
+function fmt(n){ return Math.round(n).toLocaleString('pt-PT'); }
+function fmtDate(v){ if(!v) return ''; if(v instanceof Date) return v.toLocaleDateString('pt-PT'); return String(v).split('T')[0]; }
+
+['sap','rangel','msap','mrangel'].forEach(k=>{
+  document.getElementById('f-'+k).addEventListener('change',function(e){
+    const f=e.target.files[0]; if(!f) return;
+    pending[k]=f;
+    document.getElementById('card-'+k).classList.add('loaded');
+    document.getElementById('ok-'+k).textContent='✓ '+f.name;
+    checkReady();
+  });
+});
+function checkReady(){ document.getElementById('btn-proc').disabled=!Object.values(pending).every(Boolean); }
+
+function nav(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('nav-'+id).classList.add('active');
+}
+
+function showToast(msg,color='#2E7D32'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=color; t.style.display='block';
+  setTimeout(()=>t.style.display='none',3500);
+}
+function showOv(title,sub=''){ document.getElementById('ov-title').textContent=title; document.getElementById('ov-sub').textContent=sub; document.getElementById('overlay').style.display='flex'; }
+function hideOv(){ document.getElementById('overlay').style.display='none'; }
+function setProgress(pct,label){ document.getElementById('prog-wrap').style.display='block'; document.getElementById('prog-fill').style.width=pct+'%'; document.getElementById('prog-label').textContent=label; document.getElementById('ov-sub').textContent=label; }
+
+async function readWB(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>{ try{ res(XLSX.read(e.target.result,{type:'array',cellDates:true})); }catch(err){ rej(err); } }; r.readAsArrayBuffer(file); }); }
+
+async function processAll(){
+  showOv('A ler ficheiros...');
+  try{
+    setProgress(10,'A ler Stock SAP...');
+    const [wSAP,wRNG,wMSAP,wMRNG]=await Promise.all([readWB(pending.sap),readWB(pending.rangel),readWB(pending.msap),readWB(pending.mrangel)]);
+
+    setProgress(25,'A processar Stock SAP...');
+    G.sapStock=parseSAPStock(wSAP);
+
+    setProgress(40,'A processar Stock Rangel...');
+    G.rangelStock=parseRangelStock(wRNG);
+
+    setProgress(55,'A processar Movimentos SAP...');
+    G.sapMov=parseSAPMov(wMSAP);
+
+    setProgress(65,'A processar Movimentos Rangel...');
+    G.rangelMov=parseRangelMov(wMRNG);
+
+    setProgress(75,'A calcular diferenças de stock...');
+    calcStockDiffs();
+
+    setProgress(88,'A cruzar movimentos...');
+    calcMovDiverg();
+
+    setProgress(93,'A analisar anomalias...');
+    calcAnomalias();
+
+    setProgress(100,'Concluído!');
+    document.getElementById('hdr-info').textContent='Processado em '+new Date().toLocaleString('pt-PT');
+
+    hideOv();
+    renderAll();
+    nav('resumo');
+    showToast('✓ Dados processados com sucesso!');
+  }catch(err){
+    hideOv();
+    console.error(err);
+    showToast('Erro: '+err.message,'#C8102E');
+  }
+}
+
+function parseSAPStock(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const result=[];
+  for(let i=6;i<rows.length;i++){
+    const r=rows[i];
+    const dep=parseFloat(r[3]);
+    const mat=normMat(r[4]);
+    if(!mat||isNaN(dep)) continue;
+    const lote=normLote(r[9]);
+    const desc=String(r[6]||'').trim();
+    const qty=parseQty(r[15]);
+    result.push({dep,mat,desc,lote,qty});
+  }
+  return result;
+}
+
+function parseRangelStock(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const result=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    const mat=normMat(r[0]);
+    if(!mat) continue;
+    const estado=String(r[4]||'').toUpperCase().trim();
+    const dep=DE_PARA[estado];
+    if(!dep) continue;
+    const lote=normLote(r[3]);
+    const qty=parseQty(r[6]);
+    result.push({dep,mat,desc:String(r[1]||''),lote,qty,estado:r[4]});
+  }
+  return result;
+}
+
+function parseSAPMov(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const result=[];
+  // Headers at row 4 (index 4): Material(1) Desc(2) Dep(3) TMv(4) Doc.mat(5) Data(6) Qty(7) ... TextoCab(10 approx) ... Ref(17 approx) Lote(21)
+  // Find header row
+  let hdrIdx=4;
+  for(let i=0;i<rows.length;i++){ if(String(rows[i][1]).trim()==='Material'){ hdrIdx=i; break; } }
+  const hdr=rows[hdrIdx].map(c=>String(c).trim().toLowerCase());
+  const iMat=hdr.indexOf('material')||1;
+  const iDesc=hdr.findIndex(h=>h.includes('texto brev'))||2;
+  const iDep=hdr.indexOf('dep.')||3;
+  const iTmv=hdr.indexOf('tmv')||4;
+  const iDoc=hdr.indexOf('doc.mat.')||5;
+  const iData=hdr.indexOf('data doc.')||6;
+  const iQty=hdr.indexOf('qty.')||7;
+  // TextoCab and Referência — search by column name
+  const iTexto=hdr.findIndex(h=>h.includes('texto cab'))||9;
+  const iRef=hdr.findIndex(h=>h.includes('refer'))||17;
+  const iLote=hdr.findIndex(h=>h==='lote')||21;
+
+  for(let i=hdrIdx+2;i<rows.length;i++){
+    const r=rows[i];
+    const mat=normMat(r[iMat]);
+    if(!mat) continue;
+    const docTexto=normDoc(r[iTexto]);
+    const docRef=normDoc(r[iRef]);
+    result.push({
+      mat, desc:String(r[iDesc]||'').trim(),
+      dep:parseFloat(r[iDep])||0,
+      tmv:String(r[iTmv]||''),
+      doc:normDoc(r[iDoc]),
+      data:fmtDate(r[iData]),
+      qty:parseQty(r[iQty]),
+      lote:normLote(r[iLote]),
+      docTexto, docRef,
+      docKey: docTexto||docRef,
+      origem:'SAP'
+    });
+  }
+  return result;
+}
+
+function parseRangelMov(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  const result=[];
+  // Row 0 = header: Código Produto(0) Descrição(1) Data(2) Tipo(3) Nº Doc Externo(4) Quantidade(5) Lote(6) Fornecedor(7) Operação(8)
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    const mat=normMat(r[0]);
+    if(!mat) continue;
+    result.push({
+      mat, desc:String(r[1]||'').trim(),
+      data:fmtDate(r[2]),
+      tipo:String(r[3]||''),
+      docKey:normDoc(r[4]),
+      qty:parseQty(r[5]),
+      lote:normLote(r[6]),
+      fornecedor:String(r[7]||''),
+      operacao:String(r[8]||''),
+      origem:'Rangel'
+    });
+  }
+  return result;
+}
+
+function buildDescMap(){
+  // Build a single mat->desc dictionary from ALL 4 sources, priority: SAP stock > Rangel stock > SAP mov > Rangel mov
+  const m={};
+  // Lowest priority first, higher priority overwrites
+  G.rangelMov.forEach(r=>{ if(r.desc&&r.mat&&!m[r.mat]) m[r.mat]=r.desc; });
+  G.sapMov.forEach(r=>{ if(r.desc&&r.mat) m[r.mat]=r.desc; });
+  G.rangelStock.forEach(r=>{ if(r.desc&&r.mat) m[r.mat]=r.desc; });
+  G.sapStock.forEach(r=>{ if(r.desc&&r.mat) m[r.mat]=r.desc; }); // highest priority
+  return m;
+}
+
+function getDesc(mat, localDesc, descMap){
+  if(localDesc && localDesc.trim()) return localDesc.trim();
+  return descMap[mat]||'';
+}
+
+function calcStockDiffs(){
+  // Build global desc map from all sources
+  const descMap=buildDescMap();
+
+  // Aggregate SAP by dep+mat+lote
+  const sapMap={};
+  G.sapStock.forEach(r=>{
+    const k=`${r.dep}|${r.mat}|${r.lote}`;
+    if(!sapMap[k]) sapMap[k]={dep:r.dep,mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,qty:0};
+    sapMap[k].qty+=r.qty;
+  });
+  // Aggregate Rangel by dep+mat+lote
+  const rngMap={};
+  G.rangelStock.forEach(r=>{
+    const k=`${r.dep}|${r.mat}|${r.lote}`;
+    if(!rngMap[k]) rngMap[k]={dep:r.dep,mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,qty:0};
+    rngMap[k].qty+=r.qty;
+  });
+
+  // All keys
+  const allKeys=new Set([...Object.keys(sapMap),...Object.keys(rngMap)]);
+
+  // Build SAP stock by dep for "outros depositos" column
+  const sapByMat={};
+  Object.values(sapMap).forEach(r=>{
+    if(!sapByMat[r.mat]) sapByMat[r.mat]=[];
+    sapByMat[r.mat].push({dep:r.dep,lote:r.lote,qty:r.qty});
+  });
+
+  // Resumo (ignore dep, sum all)
+  const resumoSAP={}, resumoRNG={};
+  Object.values(sapMap).forEach(r=>{ const k=`${r.mat}|${r.lote}`; if(!resumoSAP[k]) resumoSAP[k]={mat:r.mat,desc:r.desc,lote:r.lote,qty:0}; resumoSAP[k].qty+=r.qty; });
+  Object.values(rngMap).forEach(r=>{ const k=`${r.mat}|${r.lote}`; if(!resumoRNG[k]) resumoRNG[k]={mat:r.mat,lote:r.lote,qty:0}; resumoRNG[k].qty+=r.qty; });
+  const allR=new Set([...Object.keys(resumoSAP),...Object.keys(resumoRNG)]);
+  G.resumo=[];
+  allR.forEach(k=>{
+    const s=resumoSAP[k]||{mat:k.split('|')[0],desc:'',lote:k.split('|')[1],qty:0};
+    const r=resumoRNG[k]||{qty:0};
+    const diff=s.qty-r.qty;
+    if(diff!==0){
+      const mat=s.mat||k.split('|')[0];
+      G.resumo.push({mat,desc:getDesc(mat,s.desc,descMap),lote:s.lote,sapQty:s.qty,rngQty:r.qty,diff});
+    }
+  });
+  G.resumo.sort((a,b)=>a.mat.localeCompare(b.mat));
+
+  // Per dep
+  const DEPS=[12,15,16,17,18,20];
+  DEPS.forEach(dep=>{
+    const rows=[];
+    // Get all mat+lote for this dep from both SAP and Rangel
+    const depKeys=new Set();
+    Object.keys(sapMap).filter(k=>sapMap[k].dep===dep).forEach(k=>depKeys.add(k));
+    Object.keys(rngMap).filter(k=>rngMap[k].dep===dep).forEach(k=>depKeys.add(k));
+    depKeys.forEach(k=>{
+      const s=sapMap[k]||{mat:k.split('|')[1],desc:'',lote:k.split('|')[2],qty:0};
+      const r=rngMap[k]||{qty:0};
+      const diff=s.qty-r.qty;
+      if(diff!==0){
+        const mat=s.mat;
+        // outros depositos SAP
+        const outros=(sapByMat[mat]||[]).filter(x=>x.dep!==dep&&x.qty!==0).map(x=>`Dep.${x.dep}: ${fmt(x.qty)}`).join(' | ')||'-';
+        rows.push({mat,desc:getDesc(mat,s.desc,descMap),lote:s.lote,sapQty:s.qty,rngQty:r.qty,diff,outros});
+      }
+    });
+    rows.sort((a,b)=>a.mat.localeCompare(b.mat));
+    G.deps[dep]=rows;
+  });
+}
+
+function calcAnomalias(){
+  const descMap=buildDescMap();
+
+  // All SAP materials (set of mat codes)
+  const sapMats=new Set(G.sapStock.map(r=>r.mat));
+  // All SAP mat+lote combinations (ignore dep)
+  const sapMatLote=new Set(G.sapStock.map(r=>r.mat+'|'+r.lote));
+  // SAP lotes per material
+  const sapLotesByMat={};
+  G.sapStock.forEach(r=>{
+    if(!sapLotesByMat[r.mat]) sapLotesByMat[r.mat]=new Set();
+    sapLotesByMat[r.mat].add(r.lote);
+  });
+
+  // Aggregate Rangel by mat+lote+estado
+  const rngAgg={};
+  G.rangelStock.forEach(r=>{
+    const k=r.mat+'|'+r.lote+'|'+r.estado;
+    if(!rngAgg[k]) rngAgg[k]={mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,estado:r.estado,qty:0};
+    rngAgg[k].qty+=r.qty;
+  });
+
+  // Analysis 1: products in Rangel not in SAP at all
+  G.prodSoRangel=[];
+  const seenProd=new Set();
+  Object.values(rngAgg).forEach(r=>{
+    if(!sapMats.has(r.mat)){
+      G.prodSoRangel.push({mat:r.mat,desc:r.desc,estado:r.estado,lote:r.lote,qty:r.qty});
+    }
+  });
+  G.prodSoRangel.sort((a,b)=>a.mat.localeCompare(b.mat));
+
+  // Analysis 2: lotes in Rangel for materials that exist in SAP, but that specific lote doesn't exist in SAP
+  G.lotesSoRangel=[];
+  Object.values(rngAgg).forEach(r=>{
+    if(sapMats.has(r.mat) && !sapMatLote.has(r.mat+'|'+r.lote)){
+      const sapLotes=sapLotesByMat[r.mat]?[...sapLotesByMat[r.mat]].join(', '):'-';
+      G.lotesSoRangel.push({mat:r.mat,desc:r.desc,estado:r.estado,lote:r.lote,qty:r.qty,sapLotes});
+    }
+  });
+  G.lotesSoRangel.sort((a,b)=>a.mat.localeCompare(b.mat));
+}
+
+function renderAnomalias(){
+  // Prod só Rangel
+  const p=G.prodSoRangel||[];
+  const pMats=new Set(p.map(r=>r.mat)).size;
+  document.getElementById('st-prod-rangel').innerHTML=`
+    <div class="stat"><div class="stat-label">Materiais únicos</div><div class="stat-val red">${fmt(pMats)}</div></div>
+    <div class="stat"><div class="stat-label">Linhas total</div><div class="stat-val">${fmt(p.length)}</div></div>
+    <div class="stat"><div class="stat-label">Qtd total Rangel</div><div class="stat-val orange">${fmt(p.reduce((s,r)=>s+r.qty,0))}</div></div>
+    <div class="stat"><div class="stat-label">Estados distintos</div><div class="stat-val blue">${fmt(new Set(p.map(r=>r.estado)).size)}</div></div>
+  `;
+  const tbody1=document.querySelector('#tbl-prod-rangel tbody');
+  if(!p.length){ tbody1.innerHTML='<tr><td colspan="5" class="empty">Sem materiais exclusivos do Rangel ✓</td></tr>'; }
+  else tbody1.innerHTML=p.map(r=>`<tr class="neg"><td>${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.estado||''}</td><td>${r.lote||''}</td><td style="text-align:right;font-weight:700;color:#B71C1C">${fmt(r.qty)}</td></tr>`).join('');
+  document.getElementById('cnt-prod-rangel').textContent=p.length+' linhas';
+
+  // Lotes só Rangel
+  const l=G.lotesSoRangel||[];
+  const lMats=new Set(l.map(r=>r.mat)).size;
+  document.getElementById('st-lotes-rangel').innerHTML=`
+    <div class="stat"><div class="stat-label">Lotes únicos</div><div class="stat-val red">${fmt(l.length)}</div></div>
+    <div class="stat"><div class="stat-label">Materiais afectados</div><div class="stat-val orange">${fmt(lMats)}</div></div>
+    <div class="stat"><div class="stat-label">Qtd total Rangel</div><div class="stat-val">${fmt(l.reduce((s,r)=>s+r.qty,0))}</div></div>
+    <div class="stat"><div class="stat-label">Estados distintos</div><div class="stat-val blue">${fmt(new Set(l.map(r=>r.estado)).size)}</div></div>
+  `;
+  const tbody2=document.querySelector('#tbl-lotes-rangel tbody');
+  if(!l.length){ tbody2.innerHTML='<tr><td colspan="6" class="empty">Sem lotes exclusivos do Rangel ✓</td></tr>'; }
+  else tbody2.innerHTML=l.map(r=>`<tr class="neg"><td>${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.estado||''}</td><td style="font-weight:700;color:#B71C1C">${r.lote||''}</td><td style="text-align:right;font-weight:700;color:#B71C1C">${fmt(r.qty)}</td><td style="font-size:11px;color:#555">${r.sapLotes||'-'}</td></tr>`).join('');
+  document.getElementById('cnt-lotes-rangel').textContent=l.length+' linhas';
+}
+
+function searchAnomalias(id,term){
+  const t=term.toLowerCase();
+  const src=id==='prod-rangel'?G.prodSoRangel:G.lotesSoRangel;
+  const rows=t?src.filter(r=>(r.mat+r.desc+r.lote+r.estado).toLowerCase().includes(t)):src;
+  const tbody=document.querySelector('#tbl-'+id+' tbody');
+  if(id==='prod-rangel'){
+    tbody.innerHTML=rows.map(r=>`<tr class="neg"><td>${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.estado||''}</td><td>${r.lote||''}</td><td style="text-align:right;font-weight:700;color:#B71C1C">${fmt(r.qty)}</td></tr>`).join('');
+  } else {
+    tbody.innerHTML=rows.map(r=>`<tr class="neg"><td>${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.estado||''}</td><td style="font-weight:700;color:#B71C1C">${r.lote||''}</td><td style="text-align:right;font-weight:700;color:#B71C1C">${fmt(r.qty)}</td><td style="font-size:11px;color:#555">${r.sapLotes||'-'}</td></tr>`).join('');
+  }
+  document.getElementById('cnt-'+id).textContent=rows.length+' linhas';
+}
+
+
+  // Build global desc map
+  const descMap=buildDescMap();
+
+  // Build SAP mov by docKey
+  const sapDocMap={};
+  G.sapMov.forEach(r=>{
+    const k=r.docKey;
+    if(!k) return;
+    if(!sapDocMap[k]) sapDocMap[k]=[];
+    sapDocMap[k].push(r);
+  });
+  // Build Rangel mov by docKey
+  const rngDocMap={};
+  G.rangelMov.forEach(r=>{
+    const k=r.docKey;
+    if(!k) return;
+    if(!rngDocMap[k]) rngDocMap[k]=[];
+    rngDocMap[k].push(r);
+  });
+
+  const result=[];
+  // In SAP but not in Rangel
+  G.sapMov.forEach(r=>{
+    const k=r.docKey;
+    if(!k) return;
+    if(!rngDocMap[k]){
+      result.push({origem:'SAP',mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,data:r.data,tipo:r.tmv,qty:r.qty,docKey:k});
+    }
+  });
+  // In Rangel but not in SAP
+  G.rangelMov.forEach(r=>{
+    const k=r.docKey;
+    if(!k) return;
+    if(!sapDocMap[k]){
+      result.push({origem:'Rangel',mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,data:r.data,tipo:r.tipo,qty:r.qty,docKey:k});
+    }
+  });
+  result.sort((a,b)=>a.mat.localeCompare(b.mat));
+  G.allMovDiverg=result;
+  G.movDiverg=result;
+}
+
+function renderStats(id,rows,extraStats=[]){
+  const total=rows.length;
+  const posDiff=rows.filter(r=>r.diff>0).length;
+  const negDiff=rows.filter(r=>r.diff<0).length;
+  const sapTotal=rows.reduce((s,r)=>s+r.sapQty,0);
+  const rngTotal=rows.reduce((s,r)=>s+r.rngQty,0);
+  document.getElementById('st-'+id).innerHTML=`
+    <div class="stat"><div class="stat-label">Total Diferenças</div><div class="stat-val red">${fmt(total)}</div></div>
+    <div class="stat"><div class="stat-label">SAP &gt; Rangel</div><div class="stat-val blue">${fmt(posDiff)}</div></div>
+    <div class="stat"><div class="stat-label">Rangel &gt; SAP</div><div class="stat-val orange">${fmt(negDiff)}</div></div>
+    <div class="stat"><div class="stat-label">Δ Stock Total</div><div class="stat-val ${(sapTotal-rngTotal)>=0?'green':'red'}">${fmt(Math.abs(sapTotal-rngTotal))}</div></div>
+  `;
+}
+
+function renderTable(tbId,rows,hasDep,hasOutros){
+  const tbody=document.querySelector('#'+tbId+' tbody');
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="10" class="empty">Sem diferenças — stock alinhado ✓</td></tr>'; return; }
+  tbody.innerHTML=rows.map(r=>{
+    const cls=r.diff>0?'pos':r.diff<0?'neg':'';
+    const diffFmt=`<span class="dcell">${r.diff>0?'+':''}${fmt(r.diff)}</span>`;
+    let cells='';
+    if(hasDep) cells+=`<td>${r.dep||''}</td>`;
+    cells+=`<td title="${r.mat}">${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.lote||''}</td>`;
+    cells+=`<td style="text-align:right">${fmt(r.sapQty)}</td><td style="text-align:right">${fmt(r.rngQty)}</td><td style="text-align:right">${diffFmt}</td>`;
+    if(hasOutros) cells+=`<td style="color:#555;font-size:11px">${r.outros||'-'}</td>`;
+    return `<tr class="${cls}">${cells}</tr>`;
+  }).join('');
+}
+
+function renderMovTable(rows){
+  const tbody=document.querySelector('#tbl-mov tbody');
+  if(!rows.length){ tbody.innerHTML='<tr><td colspan="8" class="empty">Sem divergências de movimentos</td></tr>'; return; }
+  tbody.innerHTML=rows.map(r=>{
+    const badge=r.origem==='SAP'?'<span class="badge badge-sap">SAP</span>':'<span class="badge badge-rangel">Rangel</span>';
+    return `<tr>
+      <td>${badge}</td>
+      <td title="${r.mat}">${r.mat}</td>
+      <td title="${r.desc}">${r.desc||''}</td>
+      <td>${r.lote||''}</td>
+      <td>${r.data||''}</td>
+      <td>${r.tipo||''}</td>
+      <td style="text-align:right">${fmt(r.qty)}</td>
+      <td style="font-size:11px;color:#555">${r.docKey||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateCount(id,n){ const el=document.getElementById('cnt-'+id); if(el) el.textContent=n+' linhas'; }
+function updateMovCount(n){ document.getElementById('cnt-mov').textContent=n+' linhas'; }
+
+function renderAll(){
+  // Resumo
+  renderStats('resumo',G.resumo);
+  renderTable('tbl-resumo',G.resumo,false,false);
+  updateCount('resumo',G.resumo.length);
+
+  // Deps
+  [12,15,16,17,18,20].forEach(d=>{
+    const id='d'+d;
+    renderStats(id,G.deps[d]);
+    renderTable('tbl-d'+d,G.deps[d],false,true);
+    updateCount(id,G.deps[d].length);
+    // Nav badge
+    const nb=document.getElementById('nav-'+id);
+    if(G.deps[d].length>0){
+      const existing=nb.querySelector('.nav-badge');
+      if(existing) existing.remove();
+      nb.insertAdjacentHTML('beforeend',`<span class="nav-badge">${G.deps[d].length}</span>`);
+    }
+  });
+
+  renderAnomalias();
+
+  // Anomalia nav badges
+  if((G.prodSoRangel||[]).length>0){
+    const nb=document.getElementById('nav-prod-rangel');
+    const ex=nb.querySelector('.nav-badge'); if(ex) ex.remove();
+    nb.insertAdjacentHTML('beforeend',`<span class="nav-badge">${G.prodSoRangel.length}</span>`);
+  }
+  if((G.lotesSoRangel||[]).length>0){
+    const nb=document.getElementById('nav-lotes-rangel');
+    const ex=nb.querySelector('.nav-badge'); if(ex) ex.remove();
+    nb.insertAdjacentHTML('beforeend',`<span class="nav-badge">${G.lotesSoRangel.length}</span>`);
+  }
+
+  // Movimentos
+  const movTotal=G.allMovDiverg.length;
+  const soSAP=G.allMovDiverg.filter(r=>r.origem==='SAP').length;
+  const soRng=G.allMovDiverg.filter(r=>r.origem==='Rangel').length;
+  document.getElementById('st-mov').innerHTML=`
+    <div class="stat"><div class="stat-label">Total Divergências</div><div class="stat-val red">${fmt(movTotal)}</div></div>
+    <div class="stat"><div class="stat-label">Só no SAP</div><div class="stat-val blue">${fmt(soSAP)}</div></div>
+    <div class="stat"><div class="stat-label">Só no Rangel</div><div class="stat-val orange">${fmt(soRng)}</div></div>
+    <div class="stat"><div class="stat-label">Total Mov. SAP</div><div class="stat-val">${fmt(G.sapMov.length)}</div></div>
+  `;
+  renderMovTable(G.allMovDiverg);
+  updateMovCount(G.allMovDiverg.length);
+}
+
+function search(id,term){
+  if(id==='prod-rangel'||id==='lotes-rangel'){ searchAnomalias(id,term); return; }
+  searchTerms[id]=term.toLowerCase();
+  applyFilters(id);
+}
+
+function applyFilters(id){
+  const term=searchTerms[id]||'';
+  if(id==='mov'){
+    let rows=G.allMovDiverg;
+    if(movMode==='so_sap') rows=rows.filter(r=>r.origem==='SAP');
+    else if(movMode==='so_rangel') rows=rows.filter(r=>r.origem==='Rangel');
+    if(term) rows=rows.filter(r=>(r.mat+r.desc+r.lote+r.docKey).toLowerCase().includes(term));
+    renderMovTable(rows);
+    updateMovCount(rows.length);
+    return;
+  }
+  let src;
+  if(id==='resumo') src=G.resumo;
+  else{ const dep=parseInt(id.replace('d',''));  src=G.deps[dep]||[]; }
+  let rows=src;
+  if(term) rows=rows.filter(r=>(r.mat+r.desc+r.lote).toLowerCase().includes(term));
+  const hasDep=id==='resumo'?false:false;
+  const hasOutros=id!=='resumo';
+  renderTable('tbl-'+id,rows,hasDep,hasOutros);
+  updateCount(id,rows.length);
+}
+
+function movFilter(mode,btn){
+  movMode=mode;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters('mov');
+}
+
+// Load saved data from localStorage
+window.addEventListener('load',()=>{
+  try{
+    const saved=localStorage.getItem('delta_conciliacao');
+    if(saved){
+      const d=JSON.parse(saved);
+      G=d;
+      document.getElementById('hdr-info').textContent='Dados de '+d.savedAt;
+      renderAll();
+    }
+  }catch(e){ console.log('No saved data'); }
+});
+
+// Save to localStorage after processing
+const origRender=renderAll;
+window.renderAll=function(){
+  origRender();
+  try{
+    G.savedAt=new Date().toLocaleString('pt-PT');
+    localStorage.setItem('delta_conciliacao',JSON.stringify(G));
+  }catch(e){ console.log('Storage full, skipping save'); }
+};
+</script>
+</body>
+</html>
