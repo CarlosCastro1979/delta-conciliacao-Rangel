@@ -19,6 +19,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 .header { background: var(--blue); color: white; padding: 0 1.5rem; display: flex; align-items: center; gap: 1rem; height: 52px; position: sticky; top: 0; z-index: 50; }
 .header-logo { font-size: 16px; font-weight: 700; }
 .header-info { margin-left: auto; font-size: 11px; opacity: 0.65; }
+.btn-export-all { padding: 6px 14px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.15); color: white; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: 1rem; }
+.btn-export-all:hover { background: rgba(255,255,255,0.25); }
 .layout { display: flex; height: calc(100vh - 52px); }
 .sidebar { width: 210px; background: var(--white); border-right: 1px solid var(--border); overflow-y: auto; flex-shrink: 0; }
 .main { flex: 1; overflow-y: auto; padding: 1.25rem; }
@@ -111,6 +113,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
 <div class="header">
   <div class="header-logo">🔴 Delta Cafés — Conciliação SAP / Rangel</div>
   <div class="header-info" id="hdr-info">Sem dados carregados</div>
+  <button class="btn-export-all" onclick="exportAll()" id="btn-export-all" style="display:none">⬇ Exportar Tudo</button>
 </div>
 
 <div class="layout">
@@ -819,7 +822,57 @@ function renderMovTable(rows){
   }
 }
 
-// ── Export to Excel ───────────────────────────────────────────────────────────
+function exportAll(){
+  const wb_out = XLSX.utils.book_new();
+  const date = new Date().toLocaleDateString('pt-PT').replace(/\//g,'-');
+
+  const addSheet = (name, headers, rows) => {
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    // Column widths
+    ws['!cols'] = headers.map((_,i) => ({ wch: i===1||i===2 ? 40 : 16 }));
+    // Header style (bold)
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for(let c=range.s.c; c<=range.e.c; c++){
+      const cell = ws[XLSX.utils.encode_cell({r:0,c})];
+      if(cell) cell.s = { font:{bold:true,color:{rgb:'FFFFFF'}}, fill:{fgColor:{rgb:'1F3864'}} };
+    }
+    XLSX.utils.book_append_sheet(wb_out, ws, name.substring(0,31));
+  };
+
+  // Resumo Geral
+  addSheet('Resumo Geral',
+    ['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença'],
+    G.resumo.map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff])
+  );
+
+  // Por depósito
+  const depNames = {12:'Dep12 Livre',15:'Dep15 Lim.Val.',16:'Dep16 Rejeit.',17:'Dep17 QI',18:'Dep18 Dif.Stock',20:'Dep20 Amostras'};
+  [12,15,16,17,18,20].forEach(d=>{
+    addSheet(depNames[d],
+      ['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença','Stock noutros dep. SAP'],
+      (G.deps[d]||[]).map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff,r.outros||'-'])
+    );
+  });
+
+  // Anomalias
+  addSheet('Prod. só Rangel',
+    ['Material','Descrição','Estado Rangel','Lote','Qtd Rangel'],
+    (G.prodSoRangel||[]).map(r=>[r.mat,r.desc,r.estado,r.lote,r.qty])
+  );
+  addSheet('Lotes só Rangel',
+    ['Material','Descrição','Estado Rangel','Lote','Qtd Rangel','Lotes SAP p/ este material'],
+    (G.lotesSoRangel||[]).map(r=>[r.mat,r.desc,r.estado,r.lote,r.qty,r.sapLotes||'-'])
+  );
+
+  // Movimentos
+  addSheet('Movimentos Divergências',
+    ['Origem','Material','Descrição','Lote','Data','Tipo Mov.','Quantidade','Nº Doc. Externo'],
+    G.allMovDiverg.map(r=>[r.origem,r.mat,r.desc,r.lote,r.data,r.tipo,r.qty,r.docKey])
+  );
+
+  XLSX.writeFile(wb_out, `Delta_Conciliacao_Completa_${date}.xlsx`);
+  showToast('✓ Ficheiro completo exportado com todas as abas!','#2E7D32');
+}
 function exportExcel(id){
   let rows, headers, filename;
   const depMap={d12:'Dep12_Livre',d15:'Dep15_LimValidade',d16:'Dep16_Rejeitados',d17:'Dep17_QI',d18:'Dep18_DifStock',d20:'Dep20_Amostras'};
@@ -865,6 +918,7 @@ function updateCount(id,n){ const el=document.getElementById('cnt-'+id); if(el) 
 function updateMovCount(n){ document.getElementById('cnt-mov').textContent=n+' linhas'; }
 
 function renderAll(){
+  document.getElementById('btn-export-all').style.display='block';
   // Resumo
   renderStats('resumo',G.resumo);
   renderTable('tbl-resumo',G.resumo,false,false);
