@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Delta Cafés — Conciliação SAP / Rangel</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --red: #C8102E; --red-dark: #8B0000; --red-light: #FCE4EC;
@@ -848,27 +849,61 @@ function movFilter(mode,btn){
   applyFilters('mov');
 }
 
-// Load saved data from localStorage
-window.addEventListener('load',()=>{
-  try{
-    const saved=localStorage.getItem('delta_conciliacao');
-    if(saved){
-      const d=JSON.parse(saved);
-      G=d;
-      document.getElementById('hdr-info').textContent='Dados de '+d.savedAt;
+const SUPA_URL = 'https://qnscwppgljobelplgbkp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFuc2N3cHBnbGpvYmVscGxnYmtwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMDc3NzgsImV4cCI6MjA5MTY4Mzc3OH0.9ysq0ibsn3qDPHe5WYF-yyq9-vEKjc_hIn9BNKZccYY';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+const CHUNK_SIZE = 800000; // ~800KB per chunk to stay under Supabase 1MB limit
+
+async function saveToSupabase(dataObj) {
+  const json = JSON.stringify(dataObj);
+  const chunks = [];
+  for (let i = 0; i < json.length; i += CHUNK_SIZE) {
+    chunks.push(json.slice(i, i + CHUNK_SIZE));
+  }
+  // Delete existing data
+  await sb.from('conciliacao_dados').delete().neq('id', 0);
+  // Insert chunks
+  for (let i = 0; i < chunks.length; i++) {
+    await sb.from('conciliacao_dados').insert({ chunk_index: i, total_chunks: chunks.length, data: chunks[i], saved_at: new Date().toISOString() });
+  }
+}
+
+async function loadFromSupabase() {
+  const { data, error } = await sb.from('conciliacao_dados').select('*').order('chunk_index');
+  if (error || !data || !data.length) return null;
+  const json = data.map(r => r.data).join('');
+  return JSON.parse(json);
+}
+
+// Load saved data from Supabase on startup
+window.addEventListener('load', async () => {
+  showOv('A carregar dados guardados...');
+  try {
+    const saved = await loadFromSupabase();
+    if (saved) {
+      G = saved;
+      document.getElementById('hdr-info').textContent = 'Dados de ' + (saved.savedAt || '—');
       renderAll();
+      nav('resumo');
     }
-  }catch(e){ console.log('No saved data'); }
+  } catch(e) {
+    console.log('No saved data or error:', e);
+  }
+  hideOv();
 });
 
-// Save to localStorage after processing
-const origRender=renderAll;
-window.renderAll=function(){
-  origRender();
-  try{
-    G.savedAt=new Date().toLocaleString('pt-PT');
-    localStorage.setItem('delta_conciliacao',JSON.stringify(G));
-  }catch(e){ console.log('Storage full, skipping save'); }
+// Override renderAll to save to Supabase after processing
+const _renderAll = renderAll;
+window.renderAll = async function() {
+  _renderAll();
+  try {
+    G.savedAt = new Date().toLocaleString('pt-PT');
+    await saveToSupabase(G);
+    document.getElementById('hdr-info').textContent = 'Dados de ' + G.savedAt;
+  } catch(e) {
+    console.error('Supabase save error:', e);
+    showToast('Aviso: dados não foram guardados no servidor', '#E65100');
+  }
 };
 </script>
 </body>
