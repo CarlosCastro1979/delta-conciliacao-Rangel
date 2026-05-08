@@ -97,6 +97,13 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
 .overlay-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
 .hint { background: #FFF8E1; border: 1px solid #FFE082; border-radius: 7px; padding: 0.75rem 1rem; font-size: 12px; color: #5D4037; margin-bottom: 1rem; }
 .hint strong { color: var(--red-dark); }
+/* Filter row below header */
+.filter-row th { background: #EEF2F7; padding: 4px 6px; position: sticky; top: 33px; z-index: 2; }
+.filter-row th input, .filter-row th select { width: 100%; border: 1px solid var(--border); border-radius: 3px; padding: 3px 5px; font-size: 11px; outline: none; background: white; }
+.filter-row th input:focus, .filter-row th select:focus { border-color: var(--blue-mid); }
+/* Export button */
+.btn-export { padding: 5px 12px; border-radius: 5px; border: 1px solid var(--green); background: var(--green-light); color: var(--green); font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.btn-export:hover { background: var(--green); color: white; }
 </style>
 </head>
 <body>
@@ -180,7 +187,8 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
     <div class="tcard-header">
       <span class="tcard-title">Diferenças de stock</span>
       <span class="tcard-count" id="cnt-resumo">—</span>
-      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar material ou descrição..." oninput="search('resumo',this.value)">
+      <input class="search-input" placeholder="🔍 Pesquisar material ou descrição..." oninput="search('resumo',this.value)">
+      <button class="btn-export" onclick="exportExcel('resumo')">⬇ Excel</button>
     </div>
     <div class="tcard-wrap"><table id="tbl-resumo">
       <thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">Stock SAP</th><th style="text-align:right">Stock Rangel</th><th style="text-align:right">Diferença</th></tr></thead>
@@ -194,37 +202,55 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="page-title">Depósito 12 — Livre + Reprocesso/Ajustar</div>
   <div class="page-sub">Diferenças entre SAP dep.12 e estados Livre/Reprocesso/Ajustar no Rangel</div>
   <div class="stats-row" id="st-d12"></div>
-  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d12">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d12',this.value)"></div><div class="tcard-wrap"><table id="tbl-d12"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d12">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d12',this.value)">
+      <button class="btn-export" onclick="exportExcel('d12')">⬇ Excel</button>
+    </div>
+    <div class="tcard-wrap"><table id="tbl-d12"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d15">
   <div class="page-title">Depósito 15 — Limite Validade</div>
   <div class="page-sub">Diferenças entre SAP e estado Limite Validade no Rangel</div>
   <div class="stats-row" id="st-d15"></div>
-  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d15">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d15',this.value)"></div><div class="tcard-wrap"><table id="tbl-d15"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d15">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d15',this.value)">
+      <button class="btn-export" onclick="exportExcel('d15')">⬇ Excel</button>
+    </div>
+    <div class="tcard-wrap"><table id="tbl-d15"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d16">
   <div class="page-title">Depósito 16 — Rejeitados</div>
   <div class="page-sub">Diferenças entre SAP e estado Rejeitados no Rangel</div>
   <div class="stats-row" id="st-d16"></div>
-  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d16">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d16',this.value)"></div><div class="tcard-wrap"><table id="tbl-d16"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d16">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d16',this.value)">
+      <button class="btn-export" onclick="exportExcel('d16')">⬇ Excel</button>
+    </div>
+    <div class="tcard-wrap"><table id="tbl-d16"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d17">
   <div class="page-title">Depósito 17 — Quarentena / Qualidade</div>
   <div class="page-sub">Diferenças entre SAP dep.17 e estados QI no Rangel</div>
   <div class="stats-row" id="st-d17"></div>
-  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d17">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d17',this.value)"></div><div class="tcard-wrap"><table id="tbl-d17"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d17">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d17',this.value)">
+      <button class="btn-export" onclick="exportExcel('d17')">⬇ Excel</button>
+    </div>
+    <div class="tcard-wrap"><table id="tbl-d17"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d18">
   <div class="page-title">Depósito 18 — Diferença de Stock</div>
   <div class="page-sub">Diferenças entre SAP e estado Diferença Stock no Rangel</div>
   <div class="stats-row" id="st-d18"></div>
-  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d18">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d18',this.value)"></div><div class="tcard-wrap"><table id="tbl-d18"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d18">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d18',this.value)">
+      <button class="btn-export" onclick="exportExcel('d18')">⬇ Excel</button>
+    </div>
+    <div class="tcard-wrap"><table id="tbl-d18"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d20">
   <div class="page-title">Depósito 20 — Amostras</div>
   <div class="page-sub">Diferenças entre SAP dep.20 e estado Amostras no Rangel</div>
   <div class="stats-row" id="st-d20"></div>
-  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d20">—</span><input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('d20',this.value)"></div><div class="tcard-wrap"><table id="tbl-d20"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+  <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d20">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d20',this.value)">
+      <button class="btn-export" onclick="exportExcel('d20')">⬇ Excel</button>
+    </div>
+    <div class="tcard-wrap"><table id="tbl-d20"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
 <!-- PROD SÓ RANGEL -->
@@ -236,7 +262,9 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
     <div class="tcard-header">
       <span class="tcard-title">Materiais desconhecidos no SAP</span>
       <span class="tcard-count" id="cnt-prod-rangel">—</span>
-      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('prod-rangel',this.value)">
+      <input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('prod-rangel',this.value)">
+    
+      <button class="btn-export" onclick="exportExcel('prod-rangel')">⬇ Excel</button>
     </div>
     <div class="tcard-wrap"><table id="tbl-prod-rangel">
       <thead><tr><th>Material</th><th>Descrição</th><th>Estado Rangel</th><th>Lote</th><th style="text-align:right">Qtd Rangel</th></tr></thead>
@@ -254,7 +282,9 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
     <div class="tcard-header">
       <span class="tcard-title">Lotes não reconhecidos no SAP</span>
       <span class="tcard-count" id="cnt-lotes-rangel">—</span>
-      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('lotes-rangel',this.value)">
+      <input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('lotes-rangel',this.value)">
+    
+      <button class="btn-export" onclick="exportExcel('lotes-rangel')">⬇ Excel</button>
     </div>
     <div class="tcard-wrap"><table id="tbl-lotes-rangel">
       <thead><tr><th>Material</th><th>Descrição</th><th>Estado Rangel</th><th>Lote</th><th style="text-align:right">Qtd Rangel</th><th>Lotes SAP para este material</th></tr></thead>
@@ -277,7 +307,9 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
         <button class="fbtn" onclick="movFilter('so_sap',this)">Só no SAP</button>
         <button class="fbtn" onclick="movFilter('so_rangel',this)">Só no Rangel</button>
       </div>
-      <input class="search-input" style="margin-left:auto" placeholder="🔍 Pesquisar..." oninput="search('mov',this.value)">
+      <input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('mov',this.value)">
+    
+      <button class="btn-export" onclick="exportExcel('mov')">⬇ Excel</button>
     </div>
     <div class="tcard-wrap"><table id="tbl-mov">
       <thead><tr><th>Origem</th><th>Material</th><th>Descrição</th><th>Lote</th><th>Data</th><th>Tipo Mov.</th><th style="text-align:right">Qtd</th><th>Nº Doc. Externo</th></tr></thead>
@@ -629,6 +661,9 @@ function renderAnomalias(){
   if(!p.length){ tbody1.innerHTML='<tr><td colspan="5" class="empty">Sem materiais exclusivos do Rangel ✓</td></tr>'; }
   else tbody1.innerHTML=p.map(r=>`<tr class="neg"><td>${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.estado||''}</td><td>${r.lote||''}</td><td style="text-align:right;font-weight:700;color:#B71C1C">${fmt(r.qty)}</td></tr>`).join('');
   document.getElementById('cnt-prod-rangel').textContent=p.length+' linhas';
+  // Filter row
+  const th1=document.querySelector('#tbl-prod-rangel thead');
+  if(!th1.querySelector('.filter-row')){ const fr=document.createElement('tr'); fr.className='filter-row'; ['mat','desc','estado','lote','qty'].forEach((l,i)=>{ const ftd=document.createElement('th'); ftd.innerHTML=`<input type="text" placeholder="filtrar..." oninput="applyColFilter('tbl-prod-rangel',${i},this.value)">`; fr.appendChild(ftd); }); th1.appendChild(fr); }
 
   // Lotes só Rangel
   const l=G.lotesSoRangel||[];
@@ -643,6 +678,9 @@ function renderAnomalias(){
   if(!l.length){ tbody2.innerHTML='<tr><td colspan="6" class="empty">Sem lotes exclusivos do Rangel ✓</td></tr>'; }
   else tbody2.innerHTML=l.map(r=>`<tr class="neg"><td>${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.estado||''}</td><td style="font-weight:700;color:#B71C1C">${r.lote||''}</td><td style="text-align:right;font-weight:700;color:#B71C1C">${fmt(r.qty)}</td><td style="font-size:11px;color:#555">${r.sapLotes||'-'}</td></tr>`).join('');
   document.getElementById('cnt-lotes-rangel').textContent=l.length+' linhas';
+  // Filter row
+  const th2=document.querySelector('#tbl-lotes-rangel thead');
+  if(!th2.querySelector('.filter-row')){ const fr=document.createElement('tr'); fr.className='filter-row'; ['mat','desc','estado','lote','qty','lotes sap'].forEach((l2,i)=>{ const ftd=document.createElement('th'); ftd.innerHTML=`<input type="text" placeholder="filtrar..." oninput="applyColFilter('tbl-lotes-rangel',${i},this.value)">`; fr.appendChild(ftd); }); th2.appendChild(fr); }
 }
 
 function searchAnomalias(id,term){
@@ -686,6 +724,9 @@ function renderStats(id,rows,extraStats=[]){
   `;
 }
 
+// Store active filter values per table
+const colFilters = {};
+
 function renderTable(tbId,rows,hasDep,hasOutros){
   const tbody=document.querySelector('#'+tbId+' tbody');
   if(!rows.length){ tbody.innerHTML='<tr><td colspan="10" class="empty">Sem diferenças — stock alinhado ✓</td></tr>'; return; }
@@ -699,6 +740,48 @@ function renderTable(tbId,rows,hasDep,hasOutros){
     if(hasOutros) cells+=`<td style="color:#555;font-size:11px">${r.outros||'-'}</td>`;
     return `<tr class="${cls}">${cells}</tr>`;
   }).join('');
+  // Add filter row to thead if not already present
+  const thead=document.querySelector('#'+tbId+' thead');
+  if(!thead.querySelector('.filter-row')){
+    const frow=document.createElement('tr');
+    frow.className='filter-row';
+    const cols=thead.querySelectorAll('th');
+    cols.forEach((th,i)=>{
+      const ftd=document.createElement('th');
+      const isNum=(i>=3&&!hasOutros)||(i>=3&&hasOutros&&i<cols.length-1);
+      if(isNum){
+        // Numeric: dropdown for pos/neg/all
+        ftd.innerHTML=`<select onchange="applyColFilter('${tbId}',${i},this.value)"><option value="">Todos</option><option value="pos">Positivo</option><option value="neg">Negativo</option></select>`;
+      } else {
+        ftd.innerHTML=`<input type="text" placeholder="filtrar..." oninput="applyColFilter('${tbId}',${i},this.value)">`;
+      }
+      frow.appendChild(ftd);
+    });
+    thead.appendChild(frow);
+  }
+}
+
+function applyColFilter(tbId, colIdx, val){
+  if(!colFilters[tbId]) colFilters[tbId]={};
+  colFilters[tbId][colIdx]=val.toLowerCase().trim();
+  const rows=document.querySelectorAll('#'+tbId+' tbody tr');
+  rows.forEach(tr=>{
+    let show=true;
+    Object.entries(colFilters[tbId]).forEach(([ci,fval])=>{
+      if(!fval) return;
+      const td=tr.querySelectorAll('td')[parseInt(ci)];
+      if(!td) return;
+      const text=td.textContent.trim().toLowerCase().replace(/[,.\s]/g,'');
+      if(fval==='pos'){ if(!(parseFloat(text)>0)) show=false; }
+      else if(fval==='neg'){ if(!(parseFloat(text.replace(',','.'))<0)) show=false; }
+      else { if(!td.textContent.toLowerCase().includes(fval)) show=false; }
+    });
+    tr.style.display=show?'':'none';
+  });
+  // Update count
+  const visible=[...rows].filter(r=>r.style.display!=='none').length;
+  const cnt=document.getElementById('cnt-'+tbId.replace('tbl-',''));
+  if(cnt) cnt.textContent=visible+' linhas';
 }
 
 function renderMovTable(rows){
@@ -717,6 +800,65 @@ function renderMovTable(rows){
       <td style="font-size:11px;color:#555">${r.docKey||''}</td>
     </tr>`;
   }).join('');
+  // Filter row
+  const thead=document.querySelector('#tbl-mov thead');
+  if(!thead.querySelector('.filter-row')){
+    const frow=document.createElement('tr');
+    frow.className='filter-row';
+    const labels=['origem','mat','desc','lote','data','tipo','qty','doc'];
+    labels.forEach((l,i)=>{
+      const ftd=document.createElement('th');
+      if(l==='origem'){
+        ftd.innerHTML=`<select onchange="applyColFilter('tbl-mov',${i},this.value)"><option value="">Todos</option><option value="sap">SAP</option><option value="rangel">Rangel</option></select>`;
+      } else {
+        ftd.innerHTML=`<input type="text" placeholder="filtrar..." oninput="applyColFilter('tbl-mov',${i},this.value)">`;
+      }
+      frow.appendChild(ftd);
+    });
+    thead.appendChild(frow);
+  }
+}
+
+// ── Export to Excel ───────────────────────────────────────────────────────────
+function exportExcel(id){
+  let rows, headers, filename;
+  const depMap={d12:'Dep12_Livre',d15:'Dep15_LimValidade',d16:'Dep16_Rejeitados',d17:'Dep17_QI',d18:'Dep18_DifStock',d20:'Dep20_Amostras'};
+
+  if(id==='resumo'){
+    headers=['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença'];
+    rows=G.resumo.map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff]);
+    filename='Resumo_Geral';
+  } else if(depMap[id]){
+    const dep=parseInt(id.replace('d',''));
+    headers=['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença','Stock noutros dep. SAP'];
+    rows=(G.deps[dep]||[]).map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff,r.outros||'-']);
+    filename=depMap[id];
+  } else if(id==='prod-rangel'){
+    headers=['Material','Descrição','Estado Rangel','Lote','Qtd Rangel'];
+    rows=(G.prodSoRangel||[]).map(r=>[r.mat,r.desc,r.estado,r.lote,r.qty]);
+    filename='Produtos_So_Rangel';
+  } else if(id==='lotes-rangel'){
+    headers=['Material','Descrição','Estado Rangel','Lote','Qtd Rangel','Lotes SAP para este material'];
+    rows=(G.lotesSoRangel||[]).map(r=>[r.mat,r.desc,r.estado,r.lote,r.qty,r.sapLotes||'-']);
+    filename='Lotes_So_Rangel';
+  } else if(id==='mov'){
+    headers=['Origem','Material','Descrição','Lote','Data','Tipo Mov.','Quantidade','Nº Doc. Externo'];
+    rows=G.allMovDiverg.map(r=>[r.origem,r.mat,r.desc,r.lote,r.data,r.tipo,r.qty,r.docKey]);
+    filename='Movimentos_Divergencias';
+  } else { return; }
+
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  // Style header row
+  const range=XLSX.utils.decode_range(ws['!ref']);
+  for(let c=range.s.c;c<=range.e.c;c++){
+    const cell=ws[XLSX.utils.encode_cell({r:0,c})];
+    if(cell) cell.s={font:{bold:true},fill:{fgColor:{rgb:'1F3864'}},font:{color:{rgb:'FFFFFF'},bold:true}};
+  }
+  const wb_out=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb_out,ws,filename.substring(0,31));
+  const date=new Date().toLocaleDateString('pt-PT').replace(/\//g,'-');
+  XLSX.writeFile(wb_out,`Delta_Conciliacao_${filename}_${date}.xlsx`);
+  showToast('✓ Excel exportado: '+filename,'#2E7D32');
 }
 
 function updateCount(id,n){ const el=document.getElementById('cnt-'+id); if(el) el.textContent=n+' linhas'; }
