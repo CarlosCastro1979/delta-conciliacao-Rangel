@@ -428,7 +428,7 @@ function parseRangelStock(wb){
     if(!dep) continue;
     const lote=normLote(r[3]);
     const qty=parseQty(r[6]);
-    result.push({dep,mat,desc:String(r[1]||''),lote,qty,estado:r[4]});
+    result.push({dep,mat,desc:String(r[1]||'').trim(),lote,qty,estado:String(r[4]||'').trim()});
   }
   return result;
 }
@@ -437,39 +437,25 @@ function parseSAPMov(wb){
   const ws=wb.Sheets[wb.SheetNames[0]];
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
   const result=[];
-  // Headers at row 4 (index 4): Material(1) Desc(2) Dep(3) TMv(4) Doc.mat(5) Data(6) Qty(7) ... TextoCab(10 approx) ... Ref(17 approx) Lote(21)
-  // Find header row
-  let hdrIdx=4;
-  for(let i=0;i<rows.length;i++){ if(String(rows[i][1]).trim()==='Material'){ hdrIdx=i; break; } }
-  const hdr=rows[hdrIdx].map(c=>String(c).trim().toLowerCase());
-  const iMat=hdr.indexOf('material')||1;
-  const iDesc=hdr.findIndex(h=>h.includes('texto brev'))||2;
-  const iDep=hdr.indexOf('dep.')||3;
-  const iTmv=hdr.indexOf('tmv')||4;
-  const iDoc=hdr.indexOf('doc.mat.')||5;
-  const iData=hdr.indexOf('data doc.')||6;
-  const iQty=hdr.indexOf('qty.')||7;
-  // TextoCab and Referência — search by column name
-  const iTexto=hdr.findIndex(h=>h.includes('texto cab'))||9;
-  const iRef=hdr.findIndex(h=>h.includes('refer'))||17;
-  const iLote=hdr.findIndex(h=>h==='lote')||21;
-
-  for(let i=hdrIdx+2;i<rows.length;i++){
+  // Header row 4 (index 3): B(1)=Material C(2)=Desc E(4)=Dep F(5)=TMv G(6)=Doc H(7)=Data I(8)=Qty L(11)=TextoCab U(20)=Referência Y(24)=Lote
+  // Data starts row 6 (index 5)
+  for(let i=5;i<rows.length;i++){
     const r=rows[i];
-    const mat=normMat(r[iMat]);
+    const mat=normMat(r[1]);
     if(!mat) continue;
-    const docTexto=normDoc(r[iTexto]);
-    const docRef=normDoc(r[iRef]);
+    const textoCab=normDoc(r[11]);
+    const ref=normDoc(r[20]);
+    // docKey: Referência has the numeric doc numbers that match Rangel; TextoCab as fallback
+    const docKey=ref||textoCab;
     result.push({
-      mat, desc:String(r[iDesc]||'').trim(),
-      dep:parseFloat(r[iDep])||0,
-      tmv:String(r[iTmv]||''),
-      doc:normDoc(r[iDoc]),
-      data:fmtDate(r[iData]),
-      qty:parseQty(r[iQty]),
-      lote:normLote(r[iLote]),
-      docTexto, docRef,
-      docKey: docTexto||docRef,
+      mat, desc:String(r[2]||'').trim(),
+      dep:parseFloat(r[4])||0,
+      tmv:String(r[5]||''),
+      doc:normDoc(r[6]),
+      data:fmtDate(r[7]),
+      qty:parseQty(r[8]),
+      lote:normLote(r[24]),
+      textoCab, ref, docKey,
       origem:'SAP'
     });
   }
