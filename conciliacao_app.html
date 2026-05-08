@@ -658,44 +658,15 @@ function searchAnomalias(id,term){
   document.getElementById('cnt-'+id).textContent=rows.length+' linhas';
 }
 
-
-  // Build global desc map
+function calcMovDiverg(){
   const descMap=buildDescMap();
-
-  // Build SAP mov by docKey
   const sapDocMap={};
-  G.sapMov.forEach(r=>{
-    const k=r.docKey;
-    if(!k) return;
-    if(!sapDocMap[k]) sapDocMap[k]=[];
-    sapDocMap[k].push(r);
-  });
-  // Build Rangel mov by docKey
+  G.sapMov.forEach(r=>{ const k=r.docKey; if(!k) return; if(!sapDocMap[k]) sapDocMap[k]=[]; sapDocMap[k].push(r); });
   const rngDocMap={};
-  G.rangelMov.forEach(r=>{
-    const k=r.docKey;
-    if(!k) return;
-    if(!rngDocMap[k]) rngDocMap[k]=[];
-    rngDocMap[k].push(r);
-  });
-
+  G.rangelMov.forEach(r=>{ const k=r.docKey; if(!k) return; if(!rngDocMap[k]) rngDocMap[k]=[]; rngDocMap[k].push(r); });
   const result=[];
-  // In SAP but not in Rangel
-  G.sapMov.forEach(r=>{
-    const k=r.docKey;
-    if(!k) return;
-    if(!rngDocMap[k]){
-      result.push({origem:'SAP',mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,data:r.data,tipo:r.tmv,qty:r.qty,docKey:k});
-    }
-  });
-  // In Rangel but not in SAP
-  G.rangelMov.forEach(r=>{
-    const k=r.docKey;
-    if(!k) return;
-    if(!sapDocMap[k]){
-      result.push({origem:'Rangel',mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,data:r.data,tipo:r.tipo,qty:r.qty,docKey:k});
-    }
-  });
+  G.sapMov.forEach(r=>{ const k=r.docKey; if(!k) return; if(!rngDocMap[k]) result.push({origem:'SAP',mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,data:r.data,tipo:r.tmv,qty:r.qty,docKey:k}); });
+  G.rangelMov.forEach(r=>{ const k=r.docKey; if(!k) return; if(!sapDocMap[k]) result.push({origem:'Rangel',mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,data:r.data,tipo:r.tipo,qty:r.qty,docKey:k}); });
   result.sort((a,b)=>a.mat.localeCompare(b.mat));
   G.allMovDiverg=result;
   G.movDiverg=result;
