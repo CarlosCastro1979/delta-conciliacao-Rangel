@@ -419,13 +419,23 @@ async function processAll(){
     setProgress(93,'A analisar anomalias...');
     calcAnomalias();
 
-    setProgress(100,'Concluído!');
-    document.getElementById('hdr-info').textContent='Processado em '+new Date().toLocaleString('pt-PT');
-
+    setProgress(100,'A guardar no servidor...');
+    document.getElementById('hdr-info').textContent='A guardar...';
     hideOv();
+
+    G.savedAt = new Date().toLocaleString('pt-PT');
     renderAll();
     nav('resumo');
-    showToast('✓ Dados processados com sucesso!');
+
+    try {
+      await saveToSupabase(G);
+      document.getElementById('hdr-info').textContent='Dados de ' + G.savedAt;
+      showToast('✓ Dados processados e guardados!','#2E7D32');
+    } catch(e) {
+      console.error('Supabase save error:', e);
+      document.getElementById('hdr-info').textContent='Dados de ' + G.savedAt + ' (não guardado no servidor)';
+      showToast('⚠️ Processado mas não guardado no servidor','#E65100');
+    }
   }catch(err){
     hideOv();
     console.error(err);
@@ -1044,20 +1054,6 @@ window.addEventListener('load', async () => {
   }
   hideOv();
 });
-
-// Override renderAll to save to Supabase after processing
-const _renderAll = renderAll;
-window.renderAll = async function() {
-  _renderAll();
-  try {
-    G.savedAt = new Date().toLocaleString('pt-PT');
-    await saveToSupabase(G);
-    document.getElementById('hdr-info').textContent = 'Dados de ' + G.savedAt;
-  } catch(e) {
-    console.error('Supabase save error:', e);
-    showToast('Aviso: dados não foram guardados no servidor', '#E65100');
-  }
-};
 </script>
 </body>
 </html>
