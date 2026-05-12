@@ -86,6 +86,8 @@ tr.pos td { background: #EBF5FB; }
 tr.pos .dcell { color: #1565C0; font-weight: 700; }
 tr.neg td { background: var(--red-light); }
 tr.neg .dcell { color: #B71C1C; font-weight: 700; }
+tr.expired td { background: #FFEBEE !important; }
+tr.expired .dcell { color: #B71C1C; font-weight: 700; }
 .empty { text-align: center; padding: 3rem; color: var(--muted); }
 .badge { display: inline-block; padding: 2px 7px; border-radius: 3px; font-size: 10px; font-weight: 700; }
 .badge-sap { background: #E3F2FD; color: #1565C0; }
@@ -131,6 +133,8 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="nav-group">Anomalias</div>
   <div class="nav-item" onclick="nav('prod-rangel')" id="nav-prod-rangel"><span class="nav-dot"></span>Prod. só Rangel</div>
   <div class="nav-item" onclick="nav('lotes-rangel')" id="nav-lotes-rangel"><span class="nav-dot"></span>Lotes só Rangel</div>
+  <div class="nav-group">Consulta</div>
+  <div class="nav-item" onclick="nav('consulta')" id="nav-consulta"><span class="nav-dot"></span>Por Material</div>
   <div class="nav-group">Movimentos</div>
   <div class="nav-item" onclick="nav('movimentos')" id="nav-movimentos"><span class="nav-dot"></span>Divergências</div>
 </div>
@@ -194,7 +198,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
       <button class="btn-export" onclick="exportExcel('resumo')">⬇ Excel</button>
     </div>
     <div class="tcard-wrap"><table id="tbl-resumo">
-      <thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">Stock SAP</th><th style="text-align:right">Stock Rangel</th><th style="text-align:right">Diferença</th></tr></thead>
+      <thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">Stock SAP</th><th style="text-align:right">Stock Rangel</th><th style="text-align:right">Diferença</th></tr></thead>
       <tbody></tbody>
     </table></div>
   </div>
@@ -208,7 +212,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d12">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d12',this.value)">
       <button class="btn-export" onclick="exportExcel('d12')">⬇ Excel</button>
     </div>
-    <div class="tcard-wrap"><table id="tbl-d12"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tcard-wrap"><table id="tbl-d12"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Difs noutros dep.</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d15">
   <div class="page-title">Depósito 15 — Limite Validade</div>
@@ -217,7 +221,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d15">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d15',this.value)">
       <button class="btn-export" onclick="exportExcel('d15')">⬇ Excel</button>
     </div>
-    <div class="tcard-wrap"><table id="tbl-d15"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tcard-wrap"><table id="tbl-d15"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Difs noutros dep.</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d16">
   <div class="page-title">Depósito 16 — Rejeitados</div>
@@ -226,7 +230,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d16">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d16',this.value)">
       <button class="btn-export" onclick="exportExcel('d16')">⬇ Excel</button>
     </div>
-    <div class="tcard-wrap"><table id="tbl-d16"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tcard-wrap"><table id="tbl-d16"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Difs noutros dep.</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d17">
   <div class="page-title">Depósito 17 — Quarentena / Qualidade</div>
@@ -235,7 +239,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d17">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d17',this.value)">
       <button class="btn-export" onclick="exportExcel('d17')">⬇ Excel</button>
     </div>
-    <div class="tcard-wrap"><table id="tbl-d17"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tcard-wrap"><table id="tbl-d17"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Difs noutros dep.</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d18">
   <div class="page-title">Depósito 18 — Diferença de Stock</div>
@@ -244,7 +248,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d18">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d18',this.value)">
       <button class="btn-export" onclick="exportExcel('d18')">⬇ Excel</button>
     </div>
-    <div class="tcard-wrap"><table id="tbl-d18"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tcard-wrap"><table id="tbl-d18"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Difs noutros dep.</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 <div class="page" id="page-d20">
   <div class="page-title">Depósito 20 — Amostras</div>
@@ -253,7 +257,7 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
   <div class="tcard"><div class="tcard-header"><span class="tcard-title">Diferenças</span><span class="tcard-count" id="cnt-d20">—</span><input class="search-input" placeholder="🔍 Pesquisar..." oninput="search('d20',this.value)">
       <button class="btn-export" onclick="exportExcel('d20')">⬇ Excel</button>
     </div>
-    <div class="tcard-wrap"><table id="tbl-d20"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Stock noutros dep. SAP</th></tr></thead><tbody></tbody></table></div></div>
+    <div class="tcard-wrap"><table id="tbl-d20"><thead><tr><th>Material</th><th>Descrição</th><th>Lote</th><th>Validade</th><th style="text-align:right">SAP</th><th style="text-align:right">Rangel</th><th style="text-align:right">Diferença</th><th>Difs noutros dep.</th></tr></thead><tbody></tbody></table></div></div>
 </div>
 
 <!-- PROD SÓ RANGEL -->
@@ -294,6 +298,19 @@ tr.neg .dcell { color: #B71C1C; font-weight: 700; }
       <tbody></tbody>
     </table></div>
   </div>
+</div>
+
+<!-- CONSULTA POR MATERIAL -->
+<div class="page" id="page-consulta">
+  <div class="page-title">Consulta por Material</div>
+  <div class="page-sub">Introduz o código do material para ver todos os lotes, quantidades e validades por depósito</div>
+  <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem;align-items:center">
+    <input type="text" id="consulta-input" placeholder="Código do material (ex: 12149 ou 17957T)..." 
+      style="border:1.5px solid var(--border);border-radius:7px;padding:9px 14px;font-size:14px;width:360px;outline:none"
+      oninput="consultaMat(this.value)" onfocus="this.style.borderColor='var(--blue-mid)'" onblur="this.style.borderColor='var(--border)'">
+    <button class="btn-export" onclick="exportExcel('consulta')" id="btn-consulta-export" style="display:none">⬇ Excel</button>
+  </div>
+  <div id="consulta-result"></div>
 </div>
 
 <!-- MOVIMENTOS -->
@@ -349,7 +366,8 @@ let G = {
   sapStock:[],rangelStock:[],sapMov:[],rangelMov:[],
   resumo:[],deps:{12:[],15:[],16:[],17:[],18:[],20:[]},
   prodSoRangel:[],lotesSoRangel:[],
-  movDiverg:[],allMovDiverg:[]
+  movDiverg:[],allMovDiverg:[],
+  stockCompleto:{}
 };
 
 let searchTerms = {};
@@ -464,6 +482,7 @@ function parseRangelStock(wb){
   const ws=wb.Sheets[wb.SheetNames[0]];
   const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
   const result=[];
+  const today=new Date(); today.setHours(0,0,0,0);
   for(let i=1;i<rows.length;i++){
     const r=rows[i];
     const mat=normMat(r[0]);
@@ -473,7 +492,18 @@ function parseRangelStock(wb){
     if(!dep) continue;
     const lote=normLote(r[3]);
     const qty=parseQty(r[6]);
-    result.push({dep,mat,desc:String(r[1]||'').trim(),lote,qty,estado:String(r[4]||'').trim()});
+    // Col 5 = Data de Validade
+    let validade='', expirado=false;
+    if(r[5]){
+      const d=r[5] instanceof Date ? r[5] : new Date(r[5]);
+      if(!isNaN(d.getTime())){
+        validade=d.toLocaleDateString('pt-PT');
+        if(d<today) expirado=true;
+      } else {
+        validade=String(r[5]).trim();
+      }
+    }
+    result.push({dep,mat,desc:String(r[1]||'').trim(),lote,qty,estado:String(r[4]||'').trim(),validade,expirado});
   }
   return result;
 }
@@ -548,7 +578,6 @@ function getDesc(mat, localDesc, descMap){
 }
 
 function calcStockDiffs(){
-  // Build global desc map from all sources
   const descMap=buildDescMap();
 
   // Aggregate SAP by dep+mat+lote
@@ -558,23 +587,26 @@ function calcStockDiffs(){
     if(!sapMap[k]) sapMap[k]={dep:r.dep,mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,qty:0};
     sapMap[k].qty+=r.qty;
   });
-  // Aggregate Rangel by dep+mat+lote
+
+  // Aggregate Rangel by dep+mat+lote — also carry validade/expirado
   const rngMap={};
   G.rangelStock.forEach(r=>{
     const k=`${r.dep}|${r.mat}|${r.lote}`;
-    if(!rngMap[k]) rngMap[k]={dep:r.dep,mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,qty:0};
+    if(!rngMap[k]) rngMap[k]={dep:r.dep,mat:r.mat,desc:getDesc(r.mat,r.desc,descMap),lote:r.lote,qty:0,validade:r.validade||'',expirado:r.expirado||false};
     rngMap[k].qty+=r.qty;
+    if(r.validade) rngMap[k].validade=r.validade;
+    if(r.expirado) rngMap[k].expirado=true;
   });
 
-  // All keys
-  const allKeys=new Set([...Object.keys(sapMap),...Object.keys(rngMap)]);
-
-  // Build SAP stock by dep for "outros depositos" column
-  const sapByMat={};
-  Object.values(sapMap).forEach(r=>{
-    if(!sapByMat[r.mat]) sapByMat[r.mat]=[];
-    sapByMat[r.mat].push({dep:r.dep,lote:r.lote,qty:r.qty});
+  // Validade lookup by mat+lote (ignore dep)
+  const validadeMap={};
+  G.rangelStock.forEach(r=>{
+    const k=`${r.mat}|${r.lote}`;
+    if(r.validade&&!validadeMap[k]) validadeMap[k]={validade:r.validade,expirado:r.expirado};
   });
+
+  // Build SAP diffs by mat+lote (to know which mat+lote have differences, for "outros deps" filtering)
+  // We'll compute this after building per-dep rows
 
   // Resumo (ignore dep, sum all)
   const resumoSAP={}, resumoRNG={};
@@ -588,16 +620,20 @@ function calcStockDiffs(){
     const diff=s.qty-r.qty;
     if(diff!==0){
       const mat=s.mat||k.split('|')[0];
-      G.resumo.push({mat,desc:getDesc(mat,s.desc,descMap),lote:s.lote,sapQty:s.qty,rngQty:r.qty,diff});
+      const lote=s.lote||k.split('|')[1];
+      const vd=validadeMap[`${mat}|${lote}`]||{validade:'',expirado:false};
+      G.resumo.push({mat,desc:getDesc(mat,s.desc,descMap),lote,validade:vd.validade,expirado:vd.expirado,sapQty:s.qty,rngQty:r.qty,diff});
     }
   });
   G.resumo.sort((a,b)=>a.mat.localeCompare(b.mat));
 
-  // Per dep
+  // Per dep — first pass to get all diff rows, then build "outros" from deps WITH differences
   const DEPS=[12,15,16,17,18,20];
+
+  // Build all diff rows per dep first
+  const depDiffRows={};
   DEPS.forEach(dep=>{
     const rows=[];
-    // Get all mat+lote for this dep from both SAP and Rangel
     const depKeys=new Set();
     Object.keys(sapMap).filter(k=>sapMap[k].dep===dep).forEach(k=>depKeys.add(k));
     Object.keys(rngMap).filter(k=>rngMap[k].dep===dep).forEach(k=>depKeys.add(k));
@@ -605,16 +641,72 @@ function calcStockDiffs(){
       const s=sapMap[k]||{mat:k.split('|')[1],desc:'',lote:k.split('|')[2],qty:0};
       const r=rngMap[k]||{qty:0};
       const diff=s.qty-r.qty;
-      if(diff!==0){
-        const mat=s.mat;
-        // outros depositos SAP
-        const outros=(sapByMat[mat]||[]).filter(x=>x.dep!==dep&&x.qty!==0).map(x=>`Dep.${x.dep}: ${fmt(x.qty)}`).join(' | ')||'-';
-        rows.push({mat,desc:getDesc(mat,s.desc,descMap),lote:s.lote,sapQty:s.qty,rngQty:r.qty,diff,outros});
+      const mat=s.mat||k.split('|')[1];
+      const lote=s.lote||k.split('|')[2];
+      const vd=validadeMap[`${mat}|${lote}`]||{validade:'',expirado:false};
+      rows.push({mat,desc:getDesc(mat,s.desc,descMap),lote,validade:vd.validade,expirado:vd.expirado,sapQty:s.qty,rngQty:r.qty,diff,dep});
+    });
+    depDiffRows[dep]=rows;
+  });
+
+  // Build map: mat+lote -> list of deps WHERE THERE IS A DIFFERENCE (positive or negative)
+  const matLoteDiffDeps={};
+  DEPS.forEach(dep=>{
+    depDiffRows[dep].forEach(r=>{
+      if(r.diff!==0){
+        const k=`${r.mat}|${r.lote}`;
+        if(!matLoteDiffDeps[k]) matLoteDiffDeps[k]=[];
+        matLoteDiffDeps[k].push({dep,diff:r.diff,sapQty:r.sapQty});
       }
     });
+  });
+
+  // Second pass: only keep rows with diff, and build "outros" from deps WITH differences only
+  DEPS.forEach(dep=>{
+    const rows=depDiffRows[dep]
+      .filter(r=>r.diff!==0)
+      .map(r=>{
+        const k=`${r.mat}|${r.lote}`;
+        // Only show other deps that ALSO have a difference for this mat+lote
+        const outros=(matLoteDiffDeps[k]||[])
+          .filter(x=>x.dep!==dep)
+          .map(x=>`Dep.${x.dep}: ${x.diff>0?'+':''}${fmt(x.diff)}`)
+          .join(' | ')||'-';
+        return {...r,outros};
+      });
     rows.sort((a,b)=>a.mat.localeCompare(b.mat));
     G.deps[dep]=rows;
   });
+
+  // Build full stock map for consulta por material
+  G.stockCompleto=buildStockCompleto(sapMap,rngMap,validadeMap,descMap);
+}
+
+function buildStockCompleto(sapMap,rngMap,validadeMap,descMap){
+  // All mat+lote+dep combinations from both sides
+  const allKeys=new Set([...Object.keys(sapMap),...Object.keys(rngMap)]);
+  const depEstado={12:'Livre/Reprocesso',15:'Lim. Validade',16:'Rejeitados',17:'Quarentena',18:'Dif. Stock',20:'Amostras'};
+  const result={};
+  allKeys.forEach(k=>{
+    const s=sapMap[k];
+    const r=rngMap[k];
+    const dep=(s||r).dep;
+    const mat=(s||r).mat;
+    const lote=(s||r).lote;
+    const vd=validadeMap[`${mat}|${lote}`]||{validade:'',expirado:false};
+    if(!result[mat]) result[mat]={mat,desc:getDesc(mat,(s||r).desc,descMap),rows:[]};
+    result[mat].rows.push({
+      dep,estado:depEstado[dep]||'',lote,
+      validade:vd.validade,expirado:vd.expirado,
+      sapQty:s?s.qty:0,rngQty:r?r.qty:0,
+      diff:(s?s.qty:0)-(r?r.qty:0)
+    });
+  });
+  // Sort rows per material by dep then lote
+  Object.values(result).forEach(m=>{
+    m.rows.sort((a,b)=>a.dep-b.dep||a.lote.localeCompare(b.lote));
+  });
+  return result;
 }
 
 function calcAnomalias(){
@@ -744,16 +836,18 @@ function renderTable(tbId,rows,hasDep,hasOutros){
   const tbody=document.querySelector('#'+tbId+' tbody');
   if(!rows.length){ tbody.innerHTML='<tr><td colspan="10" class="empty">Sem diferenças — stock alinhado ✓</td></tr>'; return; }
   tbody.innerHTML=rows.map(r=>{
-    const cls=r.diff>0?'pos':r.diff<0?'neg':'';
+    const expired=r.expirado;
+    const cls=expired?'expired':r.diff>0?'pos':r.diff<0?'neg':'';
     const diffFmt=`<span class="dcell">${r.diff>0?'+':''}${fmt(r.diff)}</span>`;
+    const validadeCell=r.validade?(expired?`<span style="color:#B71C1C;font-weight:700">⚠️ ${r.validade}</span>`:r.validade):'—';
     let cells='';
     if(hasDep) cells+=`<td>${r.dep||''}</td>`;
     cells+=`<td title="${r.mat}">${r.mat}</td><td title="${r.desc}">${r.desc||''}</td><td>${r.lote||''}</td>`;
+    cells+=`<td style="text-align:center;font-size:11px">${validadeCell}</td>`;
     cells+=`<td style="text-align:right">${fmt(r.sapQty)}</td><td style="text-align:right">${fmt(r.rngQty)}</td><td style="text-align:right">${diffFmt}</td>`;
     if(hasOutros) cells+=`<td style="color:#555;font-size:11px">${r.outros||'-'}</td>`;
     return `<tr class="${cls}">${cells}</tr>`;
   }).join('');
-  // Add filter row to thead if not already present
   const thead=document.querySelector('#'+tbId+' thead');
   if(!thead.querySelector('.filter-row')){
     const frow=document.createElement('tr');
@@ -761,10 +855,11 @@ function renderTable(tbId,rows,hasDep,hasOutros){
     const cols=thead.querySelectorAll('th');
     cols.forEach((th,i)=>{
       const ftd=document.createElement('th');
-      const isNum=(i>=3&&!hasOutros)||(i>=3&&hasOutros&&i<cols.length-1);
-      if(isNum){
-        // Numeric: dropdown for pos/neg/all
+      const colName=th.textContent.trim().toLowerCase();
+      if(colName.includes('sap')||colName.includes('rangel')||colName==='diferença'){
         ftd.innerHTML=`<select onchange="applyColFilter('${tbId}',${i},this.value)"><option value="">Todos</option><option value="pos">Positivo</option><option value="neg">Negativo</option></select>`;
+      } else if(colName.includes('valid')){
+        ftd.innerHTML=`<select onchange="applyColFilter('${tbId}',${i},this.value)"><option value="">Todas</option><option value="expirado">⚠️ Expirado</option></select>`;
       } else {
         ftd.innerHTML=`<input type="text" placeholder="filtrar..." oninput="applyColFilter('${tbId}',${i},this.value)">`;
       }
@@ -784,14 +879,14 @@ function applyColFilter(tbId, colIdx, val){
       if(!fval) return;
       const td=tr.querySelectorAll('td')[parseInt(ci)];
       if(!td) return;
-      const text=td.textContent.trim().toLowerCase().replace(/[,.\s]/g,'');
-      if(fval==='pos'){ if(!(parseFloat(text)>0)) show=false; }
+      const text=td.textContent.trim().toLowerCase();
+      if(fval==='pos'){ if(!(parseFloat(text.replace(/[.,\s]/g,''))>0)) show=false; }
       else if(fval==='neg'){ if(!(parseFloat(text.replace(',','.'))<0)) show=false; }
-      else { if(!td.textContent.toLowerCase().includes(fval)) show=false; }
+      else if(fval==='expirado'){ if(!text.includes('⚠️')&&!tr.classList.contains('expired')) show=false; }
+      else { if(!text.includes(fval)) show=false; }
     });
     tr.style.display=show?'':'none';
   });
-  // Update count
   const visible=[...rows].filter(r=>r.style.display!=='none').length;
   const cnt=document.getElementById('cnt-'+tbId.replace('tbl-',''));
   if(cnt) cnt.textContent=visible+' linhas';
@@ -832,6 +927,93 @@ function renderMovTable(rows){
   }
 }
 
+// ── Consulta por Material ─────────────────────────────────────────────────────
+let lastConsultaMat = '';
+
+function consultaMat(val){
+  const mat = normMat(val.trim());
+  lastConsultaMat = mat;
+  const container = document.getElementById('consulta-result');
+  document.getElementById('btn-consulta-export').style.display = 'none';
+
+  if(!mat || mat.length < 2){
+    container.innerHTML = '<div class="empty" style="padding:2rem;color:var(--muted)">Introduz pelo menos 2 caracteres...</div>';
+    return;
+  }
+  if(!G.stockCompleto || !Object.keys(G.stockCompleto).length){
+    container.innerHTML = '<div class="empty" style="padding:2rem;color:var(--muted)">Carrega os ficheiros primeiro.</div>';
+    return;
+  }
+
+  let found = G.stockCompleto[mat];
+  if(!found){
+    const matches = Object.keys(G.stockCompleto).filter(k => k.includes(mat));
+    if(matches.length === 0){
+      container.innerHTML = `<div class="empty" style="padding:2rem;color:var(--muted)">Material "${val}" não encontrado.</div>`;
+      return;
+    }
+    if(matches.length > 1){
+      container.innerHTML = `<div style="padding:1rem;font-size:13px;color:var(--muted)">
+        ${matches.length} materiais encontrados — selecciona um:<br><br>
+        ${matches.map(m=>`<span onclick="document.getElementById('consulta-input').value='${m}';consultaMat('${m}')"
+          style="display:inline-block;margin:3px;padding:4px 10px;background:var(--blue-light);border-radius:4px;cursor:pointer;color:var(--blue);font-weight:600">${m} — ${G.stockCompleto[m].desc}</span>`).join('')}
+      </div>`;
+      return;
+    }
+    found = G.stockCompleto[matches[0]];
+  }
+
+  const rows = found.rows;
+  const totalSAP = rows.reduce((s,r)=>s+r.sapQty,0);
+  const totalRng = rows.reduce((s,r)=>s+r.rngQty,0);
+  const totalDiff = totalSAP - totalRng;
+  const hasExpired = rows.some(r=>r.expirado);
+  document.getElementById('btn-consulta-export').style.display = 'flex';
+
+  container.innerHTML = `
+    <div style="margin-bottom:1rem">
+      <div style="font-size:18px;font-weight:700;color:var(--blue)">${found.mat} — ${found.desc}</div>
+      ${hasExpired?'<div style="color:#B71C1C;font-weight:600;font-size:12px;margin-top:4px">⚠️ Este material tem lotes fora de validade</div>':''}
+    </div>
+    <div class="stats-row" style="margin-bottom:1rem">
+      <div class="stat"><div class="stat-label">Total SAP</div><div class="stat-val blue">${fmt(totalSAP)}</div></div>
+      <div class="stat"><div class="stat-label">Total Rangel</div><div class="stat-val orange">${fmt(totalRng)}</div></div>
+      <div class="stat"><div class="stat-label">Diferença Total</div><div class="stat-val ${totalDiff===0?'green':totalDiff>0?'blue':'red'}">${totalDiff>0?'+':''}${fmt(totalDiff)}</div></div>
+      <div class="stat"><div class="stat-label">Nº Lotes</div><div class="stat-val">${new Set(rows.map(r=>r.lote)).size}</div></div>
+    </div>
+    <div class="tcard">
+      <div class="tcard-header">
+        <span class="tcard-title">Detalhe por Depósito / Lote</span>
+        <span class="tcard-count">${rows.length} linhas</span>
+      </div>
+      <div class="tcard-wrap">
+        <table id="tbl-consulta">
+          <thead><tr>
+            <th>Dep / Estado</th><th>Lote</th><th>Validade</th>
+            <th style="text-align:right">Qtd SAP</th>
+            <th style="text-align:right">Qtd Rangel</th>
+            <th style="text-align:right">Diferença</th>
+          </tr></thead>
+          <tbody>
+            ${rows.map(r=>{
+              const cls=r.expirado?'expired':r.diff>0?'pos':r.diff<0?'neg':'';
+              const validadeCell=r.validade?(r.expirado?`<span style="color:#B71C1C;font-weight:700">⚠️ ${r.validade}</span>`:r.validade):'—';
+              const diffFmt=`<span class="dcell">${r.diff>0?'+':''}${fmt(r.diff)}</span>`;
+              return `<tr class="${cls}">
+                <td><strong>Dep.${r.dep}</strong> <span style="color:var(--muted);font-size:11px">/ ${r.estado}</span></td>
+                <td>${r.lote||'—'}</td>
+                <td style="font-size:11px;text-align:center">${validadeCell}</td>
+                <td style="text-align:right">${r.sapQty?fmt(r.sapQty):'—'}</td>
+                <td style="text-align:right">${r.rngQty?fmt(r.rngQty):'—'}</td>
+                <td style="text-align:right">${r.diff!==0?diffFmt:'<span style="color:var(--green)">✓</span>'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
 function exportAll(){
   const wb_out = XLSX.utils.book_new();
   const date = new Date().toLocaleDateString('pt-PT').replace(/\//g,'-');
@@ -851,16 +1033,16 @@ function exportAll(){
 
   // Resumo Geral
   addSheet('Resumo Geral',
-    ['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença'],
-    G.resumo.map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff])
+    ['Material','Descrição','Lote','Validade','Stock SAP','Stock Rangel','Diferença'],
+    G.resumo.map(r=>[r.mat,r.desc,r.lote,r.validade||'',r.sapQty,r.rngQty,r.diff])
   );
 
   // Por depósito
   const depNames = {12:'Dep12 Livre',15:'Dep15 Lim.Val.',16:'Dep16 Rejeit.',17:'Dep17 QI',18:'Dep18 Dif.Stock',20:'Dep20 Amostras'};
   [12,15,16,17,18,20].forEach(d=>{
     addSheet(depNames[d],
-      ['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença','Stock noutros dep. SAP'],
-      (G.deps[d]||[]).map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff,r.outros||'-'])
+      ['Material','Descrição','Lote','Validade','Stock SAP','Stock Rangel','Diferença','Difs noutros dep.'],
+      (G.deps[d]||[]).map(r=>[r.mat,r.desc,r.lote,r.validade||'',r.sapQty,r.rngQty,r.diff,r.outros||'-'])
     );
   });
 
@@ -888,13 +1070,13 @@ function exportExcel(id){
   const depMap={d12:'Dep12_Livre',d15:'Dep15_LimValidade',d16:'Dep16_Rejeitados',d17:'Dep17_QI',d18:'Dep18_DifStock',d20:'Dep20_Amostras'};
 
   if(id==='resumo'){
-    headers=['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença'];
-    rows=G.resumo.map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff]);
+    headers=['Material','Descrição','Lote','Validade','Stock SAP','Stock Rangel','Diferença'];
+    rows=G.resumo.map(r=>[r.mat,r.desc,r.lote,r.validade||'',r.sapQty,r.rngQty,r.diff]);
     filename='Resumo_Geral';
   } else if(depMap[id]){
     const dep=parseInt(id.replace('d',''));
-    headers=['Material','Descrição','Lote','Stock SAP','Stock Rangel','Diferença','Stock noutros dep. SAP'];
-    rows=(G.deps[dep]||[]).map(r=>[r.mat,r.desc,r.lote,r.sapQty,r.rngQty,r.diff,r.outros||'-']);
+    headers=['Material','Descrição','Lote','Validade','Stock SAP','Stock Rangel','Diferença','Difs noutros dep.'];
+    rows=(G.deps[dep]||[]).map(r=>[r.mat,r.desc,r.lote,r.validade||'',r.sapQty,r.rngQty,r.diff,r.outros||'-']);
     filename=depMap[id];
   } else if(id==='prod-rangel'){
     headers=['Material','Descrição','Estado Rangel','Lote','Qtd Rangel'];
@@ -904,6 +1086,12 @@ function exportExcel(id){
     headers=['Material','Descrição','Estado Rangel','Lote','Qtd Rangel','Lotes SAP para este material'];
     rows=(G.lotesSoRangel||[]).map(r=>[r.mat,r.desc,r.estado,r.lote,r.qty,r.sapLotes||'-']);
     filename='Lotes_So_Rangel';
+  } else if(id==='consulta'){
+    const found=G.stockCompleto[lastConsultaMat];
+    if(!found) return;
+    headers=['Dep/Estado','Lote','Validade','Qtd SAP','Qtd Rangel','Diferença'];
+    rows=found.rows.map(r=>[`Dep.${r.dep} / ${r.estado}`,r.lote,r.validade||'',r.sapQty,r.rngQty,r.diff]);
+    filename='Consulta_'+found.mat;
   } else if(id==='mov'){
     headers=['Origem','Material','Descrição','Lote','Data','Tipo Mov.','Quantidade','Nº Doc. Externo'];
     rows=G.allMovDiverg.map(r=>[r.origem,r.mat,r.desc,r.lote,r.data,r.tipo,r.qty,r.docKey]);
